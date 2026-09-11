@@ -75,12 +75,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .card[onclick]{cursor:pointer}
 .card[onclick]:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(38,76,130,.12)}
 .card[onclick]:active{transform:scale(.985)}
-/* 邮戳印章（已卖完） */
-.card.soldout::after{content:'售罄';position:absolute;top:10px;right:12px;width:52px;height:52px;border-radius:50%;
+/* 邮戳印章（列表小邮戳：售罄时叠放在到货徽章上方；.stamp-big 为详情页大邮戳） */
+.stamp-s{width:46px;height:46px;border-radius:50%;
   border:2px solid rgba(209,63,51,.8);
   box-shadow:inset 0 0 0 3px rgba(255,255,255,.9),inset 0 0 0 4.5px rgba(209,63,51,.5);
   display:flex;align-items:center;justify-content:center;color:#d13f33;font-weight:800;font-size:12.5px;
-  letter-spacing:1.5px;text-indent:1.5px;transform:rotate(-12deg);background:rgba(255,255,255,.72);z-index:2;pointer-events:none}
+  letter-spacing:1.5px;text-indent:1.5px;transform:rotate(-12deg);background:rgba(255,255,255,.72);flex:none}
 .card-title{font-size:15.5px;font-weight:700;margin-bottom:12px;display:flex;align-items:center}
 .card-title::before{content:'';width:6px;height:6px;border-radius:3px;margin-right:8px;flex:none;background:var(--blue)}
 .card .hint{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6}
@@ -170,13 +170,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .mini-thumbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .mini-thumbs img{width:46px;height:46px;object-fit:cover;border-radius:8px;cursor:zoom-in;border:1px solid var(--border)}
 /* 列表卡片 */
-.row1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.row1{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .row1 .title{font-size:15.5px;font-weight:700;word-break:break-all}
+/* 右上状态列：售罄邮戳（仅卖完时）在上、到货徽章在下，整体顶部对齐 */
+.row1-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
 .badge{font-size:11px;padding:4px 10px;border-radius:999px;flex:none;font-weight:600;
   display:inline-flex;align-items:center;gap:5px}
 .badge.red{background:#fde9e6;color:#d14a3c}
 .badge.green{background:#e2f6ec;color:#1d8a5e}
 .badge.blue{background:var(--tint);color:var(--blue-deep)}
+.badge.tag-b{background:#eef1f5;color:#5a6572}
 .nums{display:flex;gap:14px;margin-top:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
 .nums b{color:var(--text);font-weight:700}
 .nums .red{color:var(--red)}.nums .green{color:var(--green)}
@@ -209,6 +212,29 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .dd-item.on{color:var(--blue-deep);font-weight:600}
 .dd-item .ck{display:none;flex:none;width:14px;height:14px}
 .dd-item.on .ck{display:block}
+.dd-right{display:flex;align-items:center;gap:8px;flex:none}
+/* 下拉按钮清除按钮 / 颜色点 / 星标 */
+.dd-x{flex:none;display:flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;
+  background:rgba(27,28,31,.08);color:var(--muted);font-size:12px;line-height:1;cursor:pointer;font-family:inherit}
+.dd-x:hover{background:rgba(226,92,78,.15);color:var(--red)}
+/* 多选筛选 chips：每个已选值独立小标签、各自带 ×（点 × 仅移除该值） */
+.dd-chips{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
+.dd-btn.has-chips{padding-top:7px;padding-bottom:7px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--tint);color:var(--blue-deep);
+  font-size:12px;font-weight:600;padding:3px 6px 3px 10px;border-radius:999px;flex:none;max-width:100%}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip i{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;
+  background:rgba(74,158,255,.16);font-style:normal;cursor:pointer;font-size:11px;line-height:1;flex:none}
+.chip i:hover{background:rgba(226,92,78,.18);color:var(--red)}
+.dd-dot{flex:none;width:14px;height:14px;border-radius:50%;border:1px solid rgba(27,28,31,.14);cursor:pointer;transition:.15s}
+.dd-dot:hover{transform:scale(1.2)}
+.dd-star{flex:none;font-size:15px;color:rgba(27,28,31,.18);cursor:pointer;padding:0 2px;line-height:1}
+.dd-star.on{color:#f0a92e}
+.dd-tip{padding:7px 12px 5px;font-size:11.5px;color:var(--faint);text-align:center}
+/* 色板 */
+.palette{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 6px}
+.pal{width:38px;height:38px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(27,28,31,.12);cursor:pointer;transition:.15s}
+.pal:hover{transform:scale(1.12)}
 /* 表单内下拉（与输入框同款浅灰蓝填充） */
 .dd-form .dd-btn{background:#f2f6fb;box-shadow:none;font-size:16px;padding:12px 14px}
 .dd-form .dd-btn.open{background:#fff}
@@ -248,6 +274,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .enum-tag i{cursor:pointer;font-style:normal;opacity:.5;padding:2px 3px;font-size:12px;transition:.15s}
 .enum-tag i:hover{opacity:1}
 .enum-tag i:last-child:hover{color:var(--red)}
+/* 到货选项颜色圆点（设置页配色入口） */
+.enum-tag .edot{display:inline-block;width:13px;height:13px;border-radius:50%;border:1px solid rgba(27,28,31,.16);cursor:pointer;flex:none;margin-right:4px;transition:.15s}
+.enum-tag .edot:hover{transform:scale(1.25)}
 .check-line{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:12px;cursor:pointer}
 .check-line input{width:16px;height:16px;accent-color:var(--blue)}
 .hint-card p{font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:6px}
@@ -389,6 +418,7 @@ const DEFAULT_ENUMS={
   methods:['代购','官网','闲鱼','淘宝'],
   arrivals:['未发货','已发货','已到货'],
   groups:[],
+  tags:[],
   expenseTypes:['交通','住宿','餐饮','门票','购物','其他'],
   payers:['我']
 };
@@ -396,16 +426,58 @@ const ENUM_GROUPS=[
   {key:'methods',label:'购买方式'},
   {key:'arrivals',label:'到货情况'},
   {key:'groups',label:'跟团明细'},
+  {key:'tags',label:'标签'},
   {key:'expenseTypes',label:'费用种类'},
   {key:'payers',label:'支付人'}
 ];
 let ENUMS=null;
 async function loadEnums(){
   const r=await dbGet('settings','enums');
-  if(r&&r.value)ENUMS=r.value;
-  else{ENUMS=JSON.parse(JSON.stringify(DEFAULT_ENUMS));await dbPut('settings',{key:'enums',value:ENUMS})}
+  ENUMS=Object.assign(JSON.parse(JSON.stringify(DEFAULT_ENUMS)),(r&&r.value)||{});
+  await saveEnums();
 }
 async function saveEnums(){await dbPut('settings',{key:'enums',value:ENUMS})}
+/* ================= 枚举颜色（到货情况） ================= */
+/* 存 localStorage：{arrivals:{选项名:主色}}；底色由主色与白自动混合（同色系：底浅字深） */
+function getEnumColors(){try{return JSON.parse(localStorage.getItem('ledger_enum_colors'))||{}}catch(e){return{}}}
+function saveEnumColors(c){try{localStorage.setItem('ledger_enum_colors',JSON.stringify(c))}catch(e){}}
+function arrivalColor(name){const c=getEnumColors();return(c.arrivals&&c.arrivals[name])||''}
+function mixWhite(hex,ratio){const h=hex.replace('#','');const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  const m=v=>Math.round(v*ratio+255*(1-ratio));return'rgb('+m(r)+','+m(g)+','+m(b)+')'}
+/* 列表/浮层用样式：未配置颜色返回空串（走默认 badge blue） */
+function arrivalBadgeStyle(name){const c=arrivalColor(name);return c?(' style="background:'+mixWhite(c,.13)+';color:'+c+'"'):''}
+function arrivalDotStyle(name){const c=arrivalColor(name);return c?('background:'+c):('background:var(--tint)')}
+const COLOR_PALETTE=['#2563eb','#0e7490','#15803d','#b45309','#b91c1c','#6d28d9','#be185d','#374151'];
+function arrivalColorBegin(name){
+  ddClose();
+  window.__colorCtx=name;
+  openModal(
+    '<h3>到货情况颜色 · '+esc(name)+'</h3>'+
+    '<div class="palette">'+COLOR_PALETTE.map(c=>'<button class="pal" style="background:'+c+'" onclick="arrivalColorSet(\''+c+'\')"></button>').join('')+'</div>'+
+    '<p class="hint" style="margin-bottom:10px">选一个主色，标签底色会自动配成同色系浅色。</p>'+
+    '<div class="modal-btns"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn ghost" onclick="arrivalColorSet(\'\')">恢复默认</button></div>'
+  );
+}
+function arrivalColorSet(c){
+  const name=window.__colorCtx;if(!name)return;
+  const colors=getEnumColors();
+  if(!colors.arrivals)colors.arrivals={};
+  if(c)colors.arrivals[name]=c;else delete colors.arrivals[name];
+  saveEnumColors(colors);closeModal();
+  toast(c?'已设置颜色':'已恢复默认色');
+  const h=location.hash||'#/purchases';
+  if(h.indexOf('#/purchases')===0)renderPurchases();
+  else if(h.indexOf('#/settings')===0)renderSettings();
+}
+/* ================= 标签默认值 ================= */
+function getDefaultTag(){try{return localStorage.getItem('ledger_default_tag')||''}catch(e){return''}}
+function setDefaultTag(v){try{v?localStorage.setItem('ledger_default_tag',v):localStorage.removeItem('ledger_default_tag')}catch(e){}}
+function tagDefaultToggle(v,btnId){
+  if(getDefaultTag()===v){setDefaultTag('');toast('已取消默认标签')}
+  else{setDefaultTag(v);toast('已将「'+v+'」设为默认标签')}
+  ddClose();
+  const b=document.getElementById(btnId);if(b)b.click();
+}
 /* 表单内直接新增枚举：点「＋ 新增选项…」弹窗输入，保存后自动选中（写入隐藏 input 与触发器标签） */
 let ENUM_INLINE=null;
 function enumAddBegin(id,key){
@@ -428,7 +500,10 @@ async function enumInlineSave(){
   const inp=document.getElementById(c.id);
   if(inp)inp.value=v;
   const btn=document.getElementById(c.id+'-btn');
-  if(btn){const lab=btn.querySelector('.dd-val');if(lab){lab.textContent=v;lab.className='dd-val on'}}
+  if(btn){
+    const lab=btn.querySelector('.dd-val');if(lab){lab.textContent=v;lab.className='dd-val on'}
+    const x=btn.querySelector('.dd-x');if(x)x.style.display='flex';
+  }
   toast(exists?'该选项已存在，已为你选择':'已新增「'+v+'」并选择');
 }
 
@@ -469,12 +544,14 @@ async function route(){
 window.addEventListener('hashchange',route);
 
 /* ================= 购买列表 ================= */
-/* 筛选/排序条件本地保存：修改或重置前，跨刷新/重开保留 */
+/* 筛选/排序条件本地保存：修改或重置前，跨刷新/重开保留；method/arrival/tags 为多选数组 */
 let PF=(function(){
-  const def={kw:'',method:'',arrival:'',sort:'default',dir:'desc'};
+  const def={kw:'',method:[],arrival:[],tags:[],sort:'default',dir:'desc'};
+  const toArr=v=>Array.isArray(v)?v.filter(x=>x):(v?[v]:[]);
   try{const s=JSON.parse(localStorage.getItem('ledger_pf'));
     if(s&&typeof s==='object'){
       const p=Object.assign({},def,s);
+      p.method=toArr(p.method);p.arrival=toArr(p.arrival);p.tags=toArr(p.tags);
       if(p.sort!=='buyDate'&&p.sort!=='shipDate')p.sort='default';
       if(p.dir!=='asc'&&p.dir!=='desc')p.dir='desc';
       return p;
@@ -514,6 +591,20 @@ function parseShipDate(str,buyDateStr){
   }
   return{ts:new Date(y,m-1,d).getTime()};
 }
+/* 筛选区多选下拉按钮：已选值以 chips 展示，每个值自带 ×（点 × 仅移除该值） */
+function pfChips(key){
+  return (PF[key]||[]).map(v=>'<span class="chip"><span>'+esc(v)+'</span><i onclick="event.stopPropagation();pfRemoveItem(\''+key+'\',\''+esc(v)+'\')" title="移除 '+esc(v)+'">×</i></span>').join('');
+}
+function pfDDBtn(key,ph){
+  const arr=PF[key]||[],on=arr.length>0;
+  return '<div class="dd"><button type="button" class="dd-btn'+(on?' has-chips':'')+'" id="dd-btn-'+key+'" onclick="ddToggle(\''+key+'\',this)">'+
+    '<span class="dd-chips">'+(on?pfChips(key):'<span class="dd-val ph">'+ph+'</span>')+'</span>'+DDCHEV+'</button></div>';
+}
+function pfRemoveItem(key,v){
+  const i=PF[key].indexOf(v);
+  if(i>=0)PF[key].splice(i,1);
+  pfPersist();pfApply();pfSyncFilters();
+}
 async function renderPurchases(){
   $('#app').innerHTML=
     '<div class="page">'+
@@ -521,19 +612,24 @@ async function renderPurchases(){
       '<div id="p-summary"></div>'+
       '<div class="filters">'+
         '<input id="pf-kw" type="search" placeholder="搜索购买内容 / 余量明细" value="'+esc(PF.kw)+'">'+
-        ((PF.kw||PF.method||PF.arrival||PF.sort!=='default')?'<button type="button" class="pf-reset" onclick="pfReset()">↺ 重置</button>':'')+
-        '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-method" onclick="ddToggle(\'method\',this)"><span class="dd-val '+(PF.method?'on':'ph')+'">'+(PF.method?esc(PF.method):'全部购买方式')+'</span><svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>'+
-        '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-arrival" onclick="ddToggle(\'arrival\',this)"><span class="dd-val '+(PF.arrival?'on':'ph')+'">'+(PF.arrival?esc(PF.arrival):'全部到货情况')+'</span><svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>'+
-        '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-sort" onclick="ddToggle(\'sort\',this)"><span class="dd-val '+(PF.sort!=='default'?'on':'ph')+'">'+(PF.sort!=='default'?esc((PF_SORTS.find(x=>x.v===PF.sort)||{}).label):'默认排序')+'</span><svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>'+
+        '<button type="button" class="pf-reset" id="pf-reset-btn" onclick="pfReset()">↺ 重置</button>'+
+        pfDDBtn('method','全部购买方式')+
+        pfDDBtn('arrival','全部到货情况')+
+        pfDDBtn('tags','全部标签')+
+        '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-sort" onclick="ddToggle(\'sort\',this)">'+
+          '<span class="dd-val '+(PF.sort!=='default'?'on':'ph')+'">'+(PF.sort!=='default'?esc((PF_SORTS.find(x=>x.v===PF.sort)||{}).label):'默认排序')+'</span>'+
+          '<span class="dd-x" style="display:'+(PF.sort!=='default'?'flex':'none')+'" onclick="event.stopPropagation();pfClearField(\'sort\')">×</span>'+DDCHEV+'</button></div>'+
         '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-dir" onclick="pfFlipDir()" style="visibility:'+(PF.sort==='default'?'hidden':'visible')+'"><span class="dd-val">'+esc(PF.sort==='default'?'':PF_DIR_LABEL[PF.sort][PF.dir])+'</span></button></div>'+
       '</div>'+
       '<div id="p-list"></div>'+
     '</div>';
   let t=null;
-  $('#pf-kw').addEventListener('input',e=>{clearTimeout(t);t=setTimeout(()=>{PF.kw=e.target.value;pfApply()},350)});
+  $('#pf-kw').addEventListener('input',e=>{clearTimeout(t);t=setTimeout(()=>{PF.kw=e.target.value;pfApply();pfSyncFilters()},350)});
   await pfApply();
+  pfSyncFilters();
 }
-/* 自定义下拉（筛选+表单）：ddOpen/ddPick/ddClose 通用核心 */
+/* 自定义下拉（筛选+表单）：ddOpen/ddPick/ddClose 通用核心
+   multi=true：多选模式，点选项切换选中且浮层不关（onPick 返回 false 表示已自行处理） */
 let DDCONF=null;
 const DDCHEV='<svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
 const DDCK='<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -546,11 +642,12 @@ function ddOutside(e){
   if(e.target.closest('#dd-pop')||e.target.closest('.dd-btn'))return;
   ddClose();
 }
-function ddOpen(btn,items,onPick){
+function ddOpen(btn,items,onPick,opts){
   ddClose();
   btn.classList.add('open');
+  const multi=!!(opts&&opts.multi);
   const pop=document.createElement('div');pop.id='dd-pop';
-  pop.innerHTML=items.map(it=>'<div class="dd-item'+(it.on?' on':'')+(it.add?' add':'')+'" data-v="'+esc(it.v)+'" onclick="ddPick(this)">'+esc(it.label)+DDCK+'</div>').join('');
+  pop.innerHTML=items.map(it=>'<div class="dd-item'+(it.on?' on':'')+(it.add?' add':'')+'" data-v="'+esc(it.v)+'" onclick="ddPick(this)">'+esc(it.label)+'<span class="dd-right">'+(it.extra||'')+DDCK+'</span></div>').join('')+(multi?'<div class="dd-tip">可多选 · 点击空白处收起</div>':'');
   document.body.appendChild(pop);
   const r=btn.getBoundingClientRect();
   pop.style.width=r.width+'px';
@@ -558,36 +655,41 @@ function ddOpen(btn,items,onPick){
   let top=r.bottom+6;
   if(top+pop.offsetHeight>innerHeight-12)top=r.top-6-pop.offsetHeight;
   pop.style.top=Math.max(8,top)+'px';
-  DDCONF={btn:btn,onPick:onPick};
+  DDCONF={btn:btn,onPick:onPick,multi:multi};
   setTimeout(()=>document.addEventListener('click',ddOutside),0);
 }
 function ddPick(el){
   if(!DDCONF)return;
   const c=DDCONF,v=el.dataset.v;
+  if(c.multi){
+    c.onPick(v);
+    el.classList.toggle('on');
+    return;
+  }
   ddClose();
   c.onPick(v);
 }
-/* 筛选下拉 */
-const DDC={
-  method:()=>({ph:'全部购买方式',list:ENUMS.methods,val:PF.method,set:v=>PF.method=v}),
-  arrival:()=>({ph:'全部到货情况',list:ENUMS.arrivals,val:PF.arrival,set:v=>PF.arrival=v}),
-  sort:()=>({ph:'默认排序',list:PF_SORTS,val:PF.sort,set:v=>PF.sort=v||'default'})
-};
+/* 筛选下拉（method/arrival/tags 多选；sort 单选；到货项带颜色点） */
+const PF_EKEY={method:'methods',arrival:'arrivals',tags:'tags'};
 function ddToggle(key,btn){
   if(DDCONF&&DDCONF.btn===btn){ddClose();return}
-  const c=DDC[key]();
-  const items=[{v:'',label:c.ph,on:c.val===''}].concat(c.list.map(x=>{
+  const isSort=key==='sort';
+  const list=isSort?PF_SORTS:(ENUMS[PF_EKEY[key]]||[]);
+  const items=list.map(x=>{
     const isObj=typeof x==='object';
-    return{v:isObj?x.v:x,label:isObj?x.label:x,on:(isObj?x.v:x)===c.val};
-  }));
-  ddOpen(btn,items,v=>{
-    c.set(v);pfApply();
-    const lab=btn.querySelector('.dd-val');
-    if(lab){lab.textContent=v||c.ph;lab.className='dd-val '+(v?'on':'ph')}
-    if(key==='sort')pfSyncDir();
+    const v=isObj?x.v:x,label=isObj?x.label:x;
+    let extra='';
+    if(key==='arrival')extra='<span class="dd-dot" style="'+arrivalDotStyle(x)+'" onclick="event.stopPropagation();arrivalColorBegin(\''+esc(x)+'\')" title="设置颜色"></span>';
+    return{v:v,label:label,on:isSort?v===PF.sort:PF[key].indexOf(v)>=0,extra:extra};
   });
+  ddOpen(btn,items,v=>{
+    if(isSort){PF.sort=v||'default';pfApply();pfSyncFilters();return}
+    const i=PF[key].indexOf(v);
+    if(i>=0)PF[key].splice(i,1);else PF[key].push(v);
+    pfApply();pfSyncFilters();
+  },{multi:!isSort});
 }
-/* 排序方向切换 / 同步 / 重置 */
+/* 排序方向切换 / 同步 / 重置 / 单字段清除 */
 function pfSyncDir(){
   const b=document.getElementById('dd-btn-dir');if(!b)return;
   if(PF.sort==='default'){b.style.visibility='hidden';return}
@@ -601,38 +703,77 @@ function pfFlipDir(){
   PF.dir=PF.dir==='asc'?'desc':'asc';
   pfPersist();pfSyncDir();pfApply();
 }
+function pfClearField(k){
+  if(k==='sort')PF.sort='default';else PF[k]=[];
+  pfPersist();pfApply();pfSyncFilters();
+}
 function pfReset(){
-  PF={kw:'',method:'',arrival:'',sort:'default',dir:'desc'};
+  PF={kw:'',method:[],arrival:[],tags:[],sort:'default',dir:'desc'};
   pfPersist();
   renderPurchases();
 }
-/* 表单下拉（替代原生 select；隐藏 input 保留原 id，表单读取逻辑不变） */
+/* 筛选区按钮状态同步（chips 重渲染 / 重置按钮可见性） */
+function pfSyncFilters(){
+  [['method','全部购买方式'],['arrival','全部到货情况'],['tags','全部标签']].forEach(f=>{
+    const b=document.getElementById('dd-btn-'+f[0]);if(!b)return;
+    const arr=PF[f[0]]||[],on=arr.length>0;
+    const box=b.querySelector('.dd-chips');
+    if(box)box.innerHTML=on?pfChips(f[0]):'<span class="dd-val ph">'+f[1]+'</span>';
+    b.classList.toggle('has-chips',on);
+  });
+  const sb=document.getElementById('dd-btn-sort');
+  if(sb){
+    const s=PF_SORTS.find(x=>x.v===PF.sort);
+    const lab=sb.querySelector('.dd-val');
+    if(lab){lab.textContent=s?s.label:'默认排序';lab.className='dd-val '+(s?'on':'ph')}
+    const x=sb.querySelector('.dd-x');if(x)x.style.display=s?'flex':'none';
+  }
+  pfSyncDir();
+  const hasActive=PF.kw||PF.method.length||PF.arrival.length||PF.tags.length||PF.sort!=='default';
+  const rb=document.getElementById('pf-reset-btn');
+  if(rb)rb.style.display=hasActive?'inline-flex':'none';
+}
+/* 表单下拉（替代原生 select；隐藏 input 保留原 id，表单读取逻辑不变；
+   有值时按钮上显示 × 清除；浮层不再含空值项；到货项带颜色点、标签项带默认星标） */
 function ddField(id,key,selected,ph){
   return '<div class="dd dd-form">'+
     '<button type="button" class="dd-btn" id="'+id+'-btn" data-ph="'+esc(ph)+'" onclick="ddFormToggle(\''+id+'\',\''+key+'\',this)">'+
-    '<span class="dd-val '+(selected?'on':'ph')+'">'+(selected?esc(selected):esc(ph))+'</span>'+DDCHEV+'</button>'+
+    '<span class="dd-val '+(selected?'on':'ph')+'">'+(selected?esc(selected):esc(ph))+'</span>'+
+    '<span class="dd-x" style="display:'+(selected?'flex':'none')+'" onclick="event.stopPropagation();ddFormClear(\''+id+'\')">×</span>'+DDCHEV+'</button>'+
     '<input type="hidden" id="'+id+'" value="'+esc(selected||'')+'"></div>';
+}
+function ddFormClear(id){
+  const inp=document.getElementById(id);if(inp)inp.value='';
+  const btn=document.getElementById(id+'-btn');if(!btn)return;
+  const lab=btn.querySelector('.dd-val');
+  if(lab){lab.textContent=btn.dataset.ph;lab.className='dd-val ph'}
+  const x=btn.querySelector('.dd-x');if(x)x.style.display='none';
 }
 function ddFormToggle(id,key,btn){
   if(DDCONF&&DDCONF.btn===btn){ddClose();return}
-  const cur=document.getElementById(id).value,ph=btn.dataset.ph;
-  const items=[{v:'',label:ph,on:cur===''}]
-    .concat((ENUMS[key]||[]).map(x=>({v:x,label:x,on:x===cur})))
-    .concat([{v:'__add__',label:'＋ 新增选项…',add:true}]);
+  const cur=document.getElementById(id).value;
+  const items=(ENUMS[key]||[]).map(x=>{
+    let extra='';
+    if(key==='arrivals')extra='<span class="dd-dot" style="'+arrivalDotStyle(x)+'" onclick="event.stopPropagation();arrivalColorBegin(\''+esc(x)+'\')" title="设置颜色"></span>';
+    if(key==='tags')extra='<span class="dd-star'+(getDefaultTag()===x?' on':'')+'" onclick="event.stopPropagation();tagDefaultToggle(\''+esc(x)+'\',\''+id+'-btn\')" title="设为默认标签">★</span>';
+    return{v:x,label:x,on:x===cur,extra:extra};
+  }).concat([{v:'__add__',label:'＋ 新增选项…',add:true}]);
   ddOpen(btn,items,v=>{
     if(v==='__add__'){enumAddBegin(id,key);return}
     document.getElementById(id).value=v;
     const lab=btn.querySelector('.dd-val');
-    if(lab){lab.textContent=v||ph;lab.className='dd-val '+(v?'on':'ph')}
+    if(lab){lab.textContent=v;lab.className='dd-val on'}
+    const x=btn.querySelector('.dd-x');if(x)x.style.display='flex';
   });
 }
 async function pfApply(){
   const all=await dbAll('purchases');
   const list=all.filter(p=>{
-    if(PF.method&&p.method!==PF.method)return false;
-    if(PF.arrival&&p.arrival!==PF.arrival)return false;
+    if(PF.method.length&&PF.method.indexOf(p.method)<0)return false;
+    if(PF.arrival.length&&PF.arrival.indexOf(p.arrival)<0)return false;
+    if(PF.tags.length&&PF.tags.indexOf(p.tag||'')<0)return false;
     if(PF.kw){const kw=PF.kw.toLowerCase();
-      if(((p.content||'')+' '+(p.remainingDetail||'')).toLowerCase().indexOf(kw)<0)return false}
+      if(((p.content||'')+' '+(p.remainingDetail||'')+' '+(p.tag||'')).toLowerCase().indexOf(kw)<0)return false}
     return true;
   });
   /* 排序：默认=最新录入；购买日期/出荷日期=空值沉底 */
@@ -662,22 +803,25 @@ async function pfApply(){
   $('#p-summary').innerHTML=
     '<div class="summary">'+
       '<div><div class="v"><span class="cur">¥</span>'+fmt(tc)+'</div><div class="l">总成本</div></div>'+
-      '<div><div class="v"><span class="cur">¥</span>'+fmt(tr)+'</div><div class="l">总回收</div></div>'+
+      '<div><div class="v"><span class="cur">¥</span>'+fmt(tr)+'</div><div class="l">总售卖</div></div>'+
       '<div><div class="v"><span class="cur">¥</span>'+fmt(tc-tr)+'</div><div class="l">总剩余</div></div>'+
     '</div>';
   $('#p-list').innerHTML=list.length?list.map(p=>{
     const cost=costOf(p),rem=remainingOf(p),ss=salesSum(p),rec=recoveredOf(p);
-    /* 回本/亏损/盈利仅在标注卖完后判定；未标注一律「售卖中」 */
-    const badge=p.soldOut?
-      (rem>0.005?'<span class="badge red">已卖完 · 亏损</span>':(rem<-0.005?'<span class="badge green">已卖完 · 盈利</span>':'<span class="badge blue">已卖完 · 已回本</span>')):
-      '<span class="badge blue">售卖中</span>';
+    /* 右上角状态列：到货徽章为状态标识常驻右上；售罄时邮戳叠放在徽章上方 */
     return '<div class="card'+(p.soldOut?' soldout':'')+'" onclick="nav(\'#/purchase/'+p.id+'\')">'+
-      '<div class="row1"><span class="title">'+esc(p.content)+'</span>'+badge+'</div>'+
-      '<div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
-        '<span class="badge blue">'+esc(p.arrival)+'</span>'+
-        '<span class="muted small">'+esc(p.buyDate||'未填日期')+(p.shipDate?(' · 出荷 '+esc(p.shipDate)):'')+' · '+esc(p.method)+(p.groupDetail?' · '+esc(p.groupDetail):'')+'</span>'+
+      '<div class="row1">'+
+        '<span class="title">'+esc(p.content)+'</span>'+
+        '<span class="row1-side">'+
+          (p.soldOut?'<span class="stamp-s">售罄</span>':'')+
+          '<span class="badge blue"'+arrivalBadgeStyle(p.arrival)+'>'+esc(p.arrival)+'</span>'+
+        '</span>'+
       '</div>'+
-      '<div class="nums"><span>成本 <b>¥'+fmt(cost)+'</b></span><span>回收 <b>¥'+fmt(rec)+'</b></span><span class="'+(rem>0.005?'red':'green')+'">剩余 <b>¥'+fmt(rem)+'</b></span><span>已售 <b>'+ss.count+'</b>笔</span></div>'+
+      '<div style="margin-top:7px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
+        (p.tag?'<span class="badge tag-b">'+esc(p.tag)+'</span>':'')+
+        '<span class="muted small">'+esc(p.buyDate||'未填日期')+' · '+esc(p.method)+(p.shipDate?(' · '+esc(p.shipDate)):'')+'</span>'+
+      '</div>'+
+      '<div class="nums"><span>成本 <b>¥'+fmt(cost)+'</b></span><span>售卖 <b>¥'+fmt(rec)+'</b></span><span class="'+(rem>0.005?'red':'green')+'">剩余 <b>¥'+fmt(rem)+'</b></span><span>已售 <b>'+ss.count+'</b>笔</span></div>'+
     '</div>';
   }).join(''):'<div class="empty">'+EMPTY_ICON+'暂无购买记录<br>点击右上角「新建」开始记账</div>';
 }
@@ -700,7 +844,10 @@ async function renderPurchaseForm(id){
         '</div>'+
         '<div class="field"><label>出荷日期 <span class="hint">支持大致范围，如「九月中下旬」</span></label><input id="f-shipdate" type="text" value="'+esc(rec?rec.shipDate:'')+'" placeholder="如 2026/3/15 或 9月中下旬"></div>'+
         '<div class="field"><label>购买日期</label><input id="f-buydate" type="date" value="'+esc(rec?rec.buyDate||'':todayStr())+'"></div>'+
-        '<div class="field"><label>跟团明细</label>'+ddField('f-group','groups',rec?rec.groupDetail:null,'不选择')+'</div>'+
+        '<div class="calc">'+
+          '<div class="field"><label>跟团明细</label>'+ddField('f-group','groups',rec?rec.groupDetail:null,'不选择')+'</div>'+
+          '<div class="field"><label>标签 <span class="hint">可在下拉中★设默认</span></label>'+ddField('f-tag','tags',rec?(rec.tag||null):(getDefaultTag()||null),'不选择')+'</div>'+
+        '</div>'+
         '<div class="field"><label>余量明细 <span class="hint">未到货可留空</span></label><textarea id="f-remdetail" rows="3" placeholder="还剩多少没卖出">'+esc(rec?rec.remainingDetail:'')+'</textarea></div>'+
       '</div>'+
       '<div class="card">'+
@@ -758,6 +905,7 @@ async function pfSave(){
     createdAt:PF_STATE.createdAt||Date.now(),
     updatedAt:Date.now(),
     content:content,method:method,arrival:arrival,
+    tag:$('#f-tag').value||'',
     shipDate:$('#f-shipdate').value.trim(),
     jpyAmount:toNumOrNull($('#f-jpy').value),
     paidAmount:paid,
@@ -802,6 +950,7 @@ async function renderPurchaseDetail(id){
     ['购买内容',esc(p.content)],
     ['购买方式',esc(p.method)],
     ['到货情况',esc(p.arrival)],
+    ['标签',esc(p.tag)||'—'],
     ['卖完状态',so?('已卖完'+(soD?(' · '+soD.getFullYear()+'-'+pad(soD.getMonth()+1)+'-'+pad(soD.getDate())):'')):'未卖完'],
     ['出荷日期',esc(p.shipDate)||'—'],
     ['购买日期',esc(p.buyDate)||'—'],
@@ -1132,12 +1281,12 @@ async function renderSettings(){
       '<div class="page-header"><div><div class="kicker">数据与偏好</div><h1>设置</h1></div></div>'+
       '<div class="card">'+
         '<div class="card-title">选项配置</div>'+
-        '<p class="hint">以下选项在填写记录时选择；删除选项不影响已有记录的显示。</p>'+
+        '<p class="hint">以下选项在填写记录时选择；删除选项不影响已有记录的显示。到货情况选项前的圆点可配置列表徽章颜色（底色自动配成同色系浅色）。</p>'+
         ENUM_GROUPS.map(g=>
           '<div class="enum-group">'+
             '<div class="enum-title">'+g.label+'<button class="btn sm ghost" onclick="enumAdd(\''+g.key+'\')">＋ 添加</button></div>'+
             '<div class="enum-list">'+(ENUMS[g.key].length?ENUMS[g.key].map((v,i)=>
-              '<span class="enum-tag">'+esc(v)+'<i onclick="enumEdit(\''+g.key+'\','+i+')" title="修改">✎</i><i onclick="enumDelete(\''+g.key+'\','+i+')" title="删除">×</i></span>').join(''):'<span class="hint">暂无选项</span>')+'</div>'+
+              '<span class="enum-tag">'+(g.key==='arrivals'?'<span class="edot" style="'+arrivalDotStyle(v)+'" onclick="arrivalColorBegin(\''+esc(v)+'\')" title="配置徽章颜色"></span>':'')+esc(v)+'<i onclick="enumEdit(\''+g.key+'\','+i+')" title="修改">✎</i><i onclick="enumDelete(\''+g.key+'\','+i+')" title="删除">×</i></span>').join(''):'<span class="hint">暂无选项</span>')+'</div>'+
           '</div>').join('')+
       '</div>'+
       '<div class="card">'+
