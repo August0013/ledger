@@ -75,12 +75,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .card[onclick]{cursor:pointer}
 .card[onclick]:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(38,76,130,.12)}
 .card[onclick]:active{transform:scale(.985)}
-/* 邮戳印章（列表小邮戳：售罄时叠放在到货徽章上方；.stamp-big 为详情页大邮戳） */
-.stamp-s{width:46px;height:46px;border-radius:50%;
+/* 邮戳印章（列表小邮戳：绝对定位覆盖在到货徽章上方，不占布局高度；.stamp-big 为详情页大邮戳） */
+.stamp-s{position:absolute;top:50%;right:-6px;width:42px;height:42px;border-radius:50%;
   border:2px solid rgba(209,63,51,.8);
   box-shadow:inset 0 0 0 3px rgba(255,255,255,.9),inset 0 0 0 4.5px rgba(209,63,51,.5);
-  display:flex;align-items:center;justify-content:center;color:#d13f33;font-weight:800;font-size:12.5px;
-  letter-spacing:1.5px;text-indent:1.5px;transform:rotate(-12deg);background:rgba(255,255,255,.72);flex:none}
+  display:flex;align-items:center;justify-content:center;color:#d13f33;font-weight:800;font-size:12px;
+  letter-spacing:1.5px;text-indent:1.5px;
+  transform:translateY(-50%) rotate(-12deg);background:rgba(255,255,255,.75);z-index:2;pointer-events:none}
 .card-title{font-size:15.5px;font-weight:700;margin-bottom:12px;display:flex;align-items:center}
 .card-title::before{content:'';width:6px;height:6px;border-radius:3px;margin-right:8px;flex:none;background:var(--blue)}
 .card .hint{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6}
@@ -172,8 +173,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 /* 列表卡片 */
 .row1{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .row1 .title{font-size:15.5px;font-weight:700;word-break:break-all}
-/* 右上状态列：售罄邮戳（仅卖完时）在上、到货徽章在下，整体顶部对齐 */
-.row1-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+/* 右上状态列：到货徽章在流内；售罄邮戳绝对定位覆盖在徽章上方，不占布局高度 */
+.row1-side{position:relative;display:flex;align-items:flex-start;justify-content:flex-end;flex:none}
 .badge{font-size:11px;padding:4px 10px;border-radius:999px;flex:none;font-weight:600;
   display:inline-flex;align-items:center;gap:5px}
 .badge.red{background:#fde9e6;color:#d14a3c}
@@ -191,8 +192,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .pf-reset:hover{border-color:rgba(74,158,255,.45);color:var(--blue-deep)}
 .filters input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,158,255,.14)}
 .filters input::placeholder{color:var(--faint)}
-/* 自定义下拉（筛选，替代原生 select 弹层） */
+/* 自定义下拉（筛选，替代原生 select 弹层）；.dd-full 整行（多选 chips 换行只撑高自身） */
 .dd{flex:1 1 calc(50% - 4px);min-width:0}
+.dd.dd-full{flex:1 1 100%}
 .dd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;
   padding:10px 12px;border:1.5px solid transparent;border-radius:12px;background:#fff;font-size:13px;font-family:inherit;
   color:var(--text);cursor:pointer;outline:none;box-shadow:0 2px 8px rgba(38,76,130,.05);
@@ -231,6 +233,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .dd-star{flex:none;font-size:15px;color:rgba(27,28,31,.18);cursor:pointer;padding:0 2px;line-height:1}
 .dd-star.on{color:#f0a92e}
 .dd-tip{padding:7px 12px 5px;font-size:11.5px;color:var(--faint);text-align:center}
+/* 购买页分组 Tab（全部 + 按到货情况分组） */
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:8px 16px;border-radius:999px;background:#fff;font-size:13.5px;font-family:inherit;
+  color:var(--muted);cursor:pointer;box-shadow:0 2px 8px rgba(38,76,130,.05);transition:.15s;white-space:nowrap}
+.tab:hover{color:var(--blue-deep)}
+.tab.on{background:#1e2126;color:#fff;font-weight:600;box-shadow:0 5px 14px rgba(30,33,38,.22)}
+/* 设置页分组配置行 */
+.tab-cfg{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.tab-cfg:last-child{margin-bottom:0}
+.tab-cfg>span{flex:none;font-size:13.5px;color:var(--muted);width:52px}
+.tab-cfg .dd{flex:1}
 /* 色板 */
 .palette{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 6px}
 .pal{width:38px;height:38px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(27,28,31,.12);cursor:pointer;transition:.15s}
@@ -544,14 +558,43 @@ async function route(){
 window.addEventListener('hashchange',route);
 
 /* ================= 购买列表 ================= */
-/* 筛选/排序条件本地保存：修改或重置前，跨刷新/重开保留；method/arrival/tags 为多选数组 */
+/* 分组配置：购买页 Tab（全部 + 4 个分组，每组绑定一个到货情况枚举值；空=不展示） */
+const PF_TAB_MAX=4;
+function getPfTabs(){
+  try{const t=JSON.parse(localStorage.getItem('ledger_pf_tabs'));
+    if(Array.isArray(t))return t.slice(0,PF_TAB_MAX).map(x=>x||'');
+  }catch(e){}
+  return (typeof ENUMS==='object'&&ENUMS&&Array.isArray(ENUMS.arrivals)?ENUMS.arrivals.slice(0,PF_TAB_MAX):Array(PF_TAB_MAX).fill(''));
+}
+function setPfTabs(t){try{localStorage.setItem('ledger_pf_tabs',JSON.stringify(t.slice(0,PF_TAB_MAX).map(x=>x||'')))}catch(e){}}
+/* 设置页分组配置下拉：绑定到货枚举值；选「不展示」清除该分组 */
+function pfTabCfgField(i,cur){
+  return '<div class="dd"><button type="button" class="dd-btn" id="cfg-tab-'+i+'-btn" onclick="pfTabCfgToggle('+i+',this)">'+
+    '<span class="dd-val '+(cur?'on':'ph')+'">'+(cur?esc(cur):'不展示')+'</span>'+DDCHEV+'</button></div>';
+}
+function pfTabCfgToggle(i,btn){
+  if(DDCONF&&DDCONF.btn===btn){ddClose();return}
+  const tabs=getPfTabs(),cur=tabs[i]||'';
+  const items=[{v:'',label:'不展示此分组',on:!cur}]
+    .concat((ENUMS.arrivals||[]).map(x=>({v:x,label:x,on:x===cur})));
+  ddOpen(btn,items,v=>{
+    const t=getPfTabs();t[i]=v||'';
+    setPfTabs(t);
+    if(PF.tab&&PF.tab!=='all'&&t.indexOf(PF.tab)<0)PF.tab='all';
+    pfPersist();
+    renderSettings();
+    toast(v?('分组 '+(i+1)+' 已绑定「'+v+'」'):'分组 '+(i+1)+' 已取消展示');
+  });
+}
+/* 筛选/排序条件本地保存：修改或重置前，跨刷新/重开保留；method/tags 为多选数组；tab 为分组页签 */
 let PF=(function(){
-  const def={kw:'',method:[],arrival:[],tags:[],sort:'default',dir:'desc'};
+  const def={kw:'',method:[],tags:[],tab:'all',sort:'default',dir:'desc'};
   const toArr=v=>Array.isArray(v)?v.filter(x=>x):(v?[v]:[]);
   try{const s=JSON.parse(localStorage.getItem('ledger_pf'));
     if(s&&typeof s==='object'){
       const p=Object.assign({},def,s);
-      p.method=toArr(p.method);p.arrival=toArr(p.arrival);p.tags=toArr(p.tags);
+      p.method=toArr(p.method);p.tags=toArr(p.tags);
+      if(p.tab!=='all'&&typeof p.tab!=='string')p.tab='all';
       if(p.sort!=='buyDate'&&p.sort!=='shipDate')p.sort='default';
       if(p.dir!=='asc'&&p.dir!=='desc')p.dir='desc';
       return p;
@@ -597,7 +640,7 @@ function pfChips(key){
 }
 function pfDDBtn(key,ph){
   const arr=PF[key]||[],on=arr.length>0;
-  return '<div class="dd"><button type="button" class="dd-btn'+(on?' has-chips':'')+'" id="dd-btn-'+key+'" onclick="ddToggle(\''+key+'\',this)">'+
+  return '<div class="dd dd-full"><button type="button" class="dd-btn'+(on?' has-chips':'')+'" id="dd-btn-'+key+'" onclick="ddToggle(\''+key+'\',this)">'+
     '<span class="dd-chips">'+(on?pfChips(key):'<span class="dd-val ph">'+ph+'</span>')+'</span>'+DDCHEV+'</button></div>';
 }
 function pfRemoveItem(key,v){
@@ -605,16 +648,30 @@ function pfRemoveItem(key,v){
   if(i>=0)PF[key].splice(i,1);
   pfPersist();pfApply();pfSyncFilters();
 }
+/* 分组 Tab：全部 + 已绑定的到货枚举值 */
+function pfTabsInner(){
+  const tabs=[{v:'all',label:'全部'}].concat(getPfTabs().filter(Boolean).map(x=>({v:x,label:x})));
+  return tabs.map(t=>'<button type="button" class="tab'+(PF.tab===t.v?' on':'')+'" onclick="pfSwitchTab(\''+esc(t.v)+'\')">'+esc(t.label)+'</button>').join('');
+}
+function pfSwitchTab(v){
+  if(PF.tab===v)return;
+  PF.tab=v;pfPersist();
+  const el=document.getElementById('pf-tabs');
+  if(el)el.innerHTML=pfTabsInner();
+  pfApply();
+}
 async function renderPurchases(){
+  /* 分组绑定失效（枚举被删/配置变更）时回退「全部」 */
+  if(PF.tab!=='all'&&getPfTabs().indexOf(PF.tab)<0)PF.tab='all';
   $('#app').innerHTML=
     '<div class="page">'+
       '<div class="page-header"><div><div class="kicker">购销明细</div><h1>购买记录</h1></div><button class="btn primary" onclick="nav(\'#/purchase-form\')">＋ 新建</button></div>'+
+      '<div class="tabs" id="pf-tabs">'+pfTabsInner()+'</div>'+
       '<div id="p-summary"></div>'+
       '<div class="filters">'+
         '<input id="pf-kw" type="search" placeholder="搜索购买内容 / 余量明细" value="'+esc(PF.kw)+'">'+
         '<button type="button" class="pf-reset" id="pf-reset-btn" onclick="pfReset()">↺ 重置</button>'+
         pfDDBtn('method','全部购买方式')+
-        pfDDBtn('arrival','全部到货情况')+
         pfDDBtn('tags','全部标签')+
         '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-sort" onclick="ddToggle(\'sort\',this)">'+
           '<span class="dd-val '+(PF.sort!=='default'?'on':'ph')+'">'+(PF.sort!=='default'?esc((PF_SORTS.find(x=>x.v===PF.sort)||{}).label):'默认排序')+'</span>'+
@@ -669,8 +726,8 @@ function ddPick(el){
   ddClose();
   c.onPick(v);
 }
-/* 筛选下拉（method/arrival/tags 多选；sort 单选；到货项带颜色点） */
-const PF_EKEY={method:'methods',arrival:'arrivals',tags:'tags'};
+/* 筛选下拉（method/tags 多选；sort 单选） */
+const PF_EKEY={method:'methods',tags:'tags'};
 function ddToggle(key,btn){
   if(DDCONF&&DDCONF.btn===btn){ddClose();return}
   const isSort=key==='sort';
@@ -678,9 +735,7 @@ function ddToggle(key,btn){
   const items=list.map(x=>{
     const isObj=typeof x==='object';
     const v=isObj?x.v:x,label=isObj?x.label:x;
-    let extra='';
-    if(key==='arrival')extra='<span class="dd-dot" style="'+arrivalDotStyle(x)+'" onclick="event.stopPropagation();arrivalColorBegin(\''+esc(x)+'\')" title="设置颜色"></span>';
-    return{v:v,label:label,on:isSort?v===PF.sort:PF[key].indexOf(v)>=0,extra:extra};
+    return{v:v,label:label,on:isSort?v===PF.sort:PF[key].indexOf(v)>=0};
   });
   ddOpen(btn,items,v=>{
     if(isSort){PF.sort=v||'default';pfApply();pfSyncFilters();return}
@@ -708,13 +763,13 @@ function pfClearField(k){
   pfPersist();pfApply();pfSyncFilters();
 }
 function pfReset(){
-  PF={kw:'',method:[],arrival:[],tags:[],sort:'default',dir:'desc'};
+  PF={kw:'',method:[],tags:[],tab:PF.tab,sort:'default',dir:'desc'};
   pfPersist();
   renderPurchases();
 }
 /* 筛选区按钮状态同步（chips 重渲染 / 重置按钮可见性） */
 function pfSyncFilters(){
-  [['method','全部购买方式'],['arrival','全部到货情况'],['tags','全部标签']].forEach(f=>{
+  [['method','全部购买方式'],['tags','全部标签']].forEach(f=>{
     const b=document.getElementById('dd-btn-'+f[0]);if(!b)return;
     const arr=PF[f[0]]||[],on=arr.length>0;
     const box=b.querySelector('.dd-chips');
@@ -729,7 +784,7 @@ function pfSyncFilters(){
     const x=sb.querySelector('.dd-x');if(x)x.style.display=s?'flex':'none';
   }
   pfSyncDir();
-  const hasActive=PF.kw||PF.method.length||PF.arrival.length||PF.tags.length||PF.sort!=='default';
+  const hasActive=PF.kw||PF.method.length||PF.tags.length||PF.sort!=='default';
   const rb=document.getElementById('pf-reset-btn');
   if(rb)rb.style.display=hasActive?'inline-flex':'none';
 }
@@ -769,8 +824,8 @@ function ddFormToggle(id,key,btn){
 async function pfApply(){
   const all=await dbAll('purchases');
   const list=all.filter(p=>{
+    if(PF.tab&&PF.tab!=='all'&&p.arrival!==PF.tab)return false;
     if(PF.method.length&&PF.method.indexOf(p.method)<0)return false;
-    if(PF.arrival.length&&PF.arrival.indexOf(p.arrival)<0)return false;
     if(PF.tags.length&&PF.tags.indexOf(p.tag||'')<0)return false;
     if(PF.kw){const kw=PF.kw.toLowerCase();
       if(((p.content||'')+' '+(p.remainingDetail||'')+' '+(p.tag||'')).toLowerCase().indexOf(kw)<0)return false}
@@ -808,13 +863,13 @@ async function pfApply(){
     '</div>';
   $('#p-list').innerHTML=list.length?list.map(p=>{
     const cost=costOf(p),rem=remainingOf(p),ss=salesSum(p),rec=recoveredOf(p);
-    /* 右上角状态列：到货徽章为状态标识常驻右上；售罄时邮戳叠放在徽章上方 */
+    /* 右上角状态列：到货徽章常驻右上；售罄邮戳绝对定位覆盖在徽章上方（不占高度） */
     return '<div class="card'+(p.soldOut?' soldout':'')+'" onclick="nav(\'#/purchase/'+p.id+'\')">'+
       '<div class="row1">'+
         '<span class="title">'+esc(p.content)+'</span>'+
         '<span class="row1-side">'+
-          (p.soldOut?'<span class="stamp-s">售罄</span>':'')+
           '<span class="badge blue"'+arrivalBadgeStyle(p.arrival)+'>'+esc(p.arrival)+'</span>'+
+          (p.soldOut?'<span class="stamp-s">售罄</span>':'')+
         '</span>'+
       '</div>'+
       '<div style="margin-top:7px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
@@ -834,7 +889,7 @@ async function renderPurchaseForm(id){
   PF_STATE={editingId:rec?rec.id:null,createdAt:rec?rec.createdAt:null,images:rec?(rec.images||[]):[],sales:rec?(rec.sales||[]):[]};
   $('#app').innerHTML=
     '<div class="subheader"><button class="iconbtn" onclick="nav(\'#/purchases\')">'+BACK_SVG+'</button><h1>'+(rec?'编辑购买':'新建购买')+'</h1>'+
-    (rec?'<button class="btn sm danger" onclick="pfDelete()">删除</button>':'')+'</div>'+
+    '<button class="btn sm primary" onclick="pfSave()">保存</button></div>'+
     '<div class="page no-tab">'+
       '<div class="card">'+
         '<div class="field"><label>购买内容 *</label><textarea id="f-content" rows="3" placeholder="买了什么">'+esc(rec?rec.content:'')+'</textarea></div>'+
@@ -871,7 +926,7 @@ async function renderPurchaseForm(id){
         '<button class="addimg" onclick="$(\'#f-img\').click()">＋<br>添加图片</button>'+
         '<input type="file" id="f-img" accept="image/*" multiple style="display:none" onchange="pfAddImages(this)">'+
       '</div>'+
-      '<button class="btn primary block" onclick="pfSave()">保存</button>'+
+      (rec?'<button class="btn danger block" onclick="pfDelete()">删除这条记录</button>':'')+
     '</div>';
   ['f-jpy','f-paid','f-intl','f-domestic'].forEach(x=>$('#'+x).addEventListener('input',pfCalc));
   pfCalc();pfRenderThumbs();
@@ -964,7 +1019,7 @@ async function renderPurchaseDetail(id){
     ['余量明细',esc(p.remainingDetail)||'—']
   ];
   $('#app').innerHTML=
-    '<div class="subheader"><button class="iconbtn" onclick="nav(\'#/purchases\')">'+BACK_SVG+'</button><h1>'+esc(p.content)+'</h1><button class="btn sm ghost" onclick="nav(\'#/purchase-form/'+p.id+'\')">编辑</button></div>'+
+    '<div class="subheader"><button class="iconbtn" onclick="nav(\'#/purchases\')">'+BACK_SVG+'</button><h1>'+esc(p.content)+'</h1></div>'+
     '<div class="page no-tab">'+
       '<div class="remaining-banner'+bannerCls+'">'+
         (so?'<div class="stamp-big">售罄</div>':'')+
@@ -985,6 +1040,7 @@ async function renderPurchaseDetail(id){
             '<div class="item-ops"><button class="btn sm ghost" onclick="openSaleModalById(\''+p.id+'\',\''+s.id+'\')">编辑</button><button class="btn sm danger-ghost" onclick="saleDelete(\''+p.id+'\',\''+s.id+'\')">删除</button></div>'+
           '</div>').join(''):'<div class="hint" style="padding:8px 0">还没有售卖记录</div>')+
       '</div>'+
+      '<button class="btn primary block" onclick="nav(\'#/purchase-form/'+p.id+'\')">编辑</button>'+
     '</div>';
 }
 /* 卖完标记：卖完时按「成本 − 回收」自动结算 亏损 / 回本 / 盈利 */
@@ -1290,6 +1346,12 @@ async function renderSettings(){
           '</div>').join('')+
       '</div>'+
       '<div class="card">'+
+        '<div class="card-title">购买页分组</div>'+
+        '<p class="hint">购买记录页顶部的 Tab 按到货情况分组：第一个 Tab 固定为「全部」，其余每个分组绑定一个到货情况值；不绑定的分组不展示。</p>'+
+        getPfTabs().concat(Array(Math.max(0,PF_TAB_MAX-getPfTabs().length)).fill('')).slice(0,PF_TAB_MAX).map((v,i)=>
+          '<div class="tab-cfg"><span>分组 '+(i+1)+'</span>'+pfTabCfgField(i,v)+'</div>').join('')+
+      '</div>'+
+      '<div class="card">'+
         '<div class="card-title">备份与恢复</div>'+
         '<label class="check-line"><input type="checkbox" id="exp-images" checked>备份包含图片（取消可减小文件体积）</label>'+
         '<button class="btn primary block" onclick="exportJSON()">导出备份（JSON）</button>'+
@@ -1341,6 +1403,11 @@ async function enumDelete(key,idx){
   if(!await confirmDlg('删除选项「'+esc(v)+'」？<br>已有记录不受影响。',{danger:true,okText:'删除'}))return;
   ENUMS[key].splice(idx,1);
   await saveEnums();
+  /* 到货枚举被删时，同步清掉购买页分组绑定 */
+  if(key==='arrivals'){
+    const t=getPfTabs(),i=t.indexOf(v);
+    if(i>=0){t[i]='';setPfTabs(t);if(PF.tab===v)PF.tab='all'}
+  }
   renderSettings();
 }
 
