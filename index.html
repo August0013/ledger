@@ -181,8 +181,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .nums b{color:var(--text);font-weight:700}
 .nums .red{color:var(--red)}.nums .green{color:var(--green)}
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.filters input{flex:1 1 100%;min-width:0;padding:10px 13px;border:1.5px solid transparent;border-radius:12px;
+.filters input{flex:1 1 auto;min-width:0;padding:10px 13px;border:1.5px solid transparent;border-radius:12px;
   background:#fff;font-size:13px;outline:none;color:var(--text);transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;box-shadow:0 2px 8px rgba(38,76,130,.05)}
+.pf-reset{flex:none;display:inline-flex;align-items:center;gap:4px;padding:10px 14px;border:1.5px solid transparent;border-radius:12px;
+  background:#fff;font-size:13px;font-family:inherit;color:var(--muted);cursor:pointer;box-shadow:0 2px 8px rgba(38,76,130,.05);transition:.15s}
+.pf-reset:hover{border-color:rgba(74,158,255,.45);color:var(--blue-deep)}
 .filters input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,158,255,.14)}
 .filters input::placeholder{color:var(--faint)}
 /* 自定义下拉（筛选，替代原生 select 弹层） */
@@ -466,7 +469,51 @@ async function route(){
 window.addEventListener('hashchange',route);
 
 /* ================= 购买列表 ================= */
-let PF={kw:'',method:'',arrival:''};
+/* 筛选/排序条件本地保存：修改或重置前，跨刷新/重开保留 */
+let PF=(function(){
+  const def={kw:'',method:'',arrival:'',sort:'default',dir:'desc'};
+  try{const s=JSON.parse(localStorage.getItem('ledger_pf'));
+    if(s&&typeof s==='object'){
+      const p=Object.assign({},def,s);
+      if(p.sort!=='buyDate'&&p.sort!=='shipDate')p.sort='default';
+      if(p.dir!=='asc'&&p.dir!=='desc')p.dir='desc';
+      return p;
+    }
+  }catch(e){}
+  return def;
+})();
+function pfPersist(){try{localStorage.setItem('ledger_pf',JSON.stringify(PF))}catch(e){}}
+const PF_SORTS=[{v:'buyDate',label:'按购买日期'},{v:'shipDate',label:'按出荷日期'}];
+const PF_DIR_LABEL={buyDate:{asc:'↑ 旧→新',desc:'↓ 新→旧'},shipDate:{asc:'↑ 早→晚',desc:'↓ 晚→早'}};
+/* 出荷日期解析：支持 2026/3/15、3月15日、2026年3月、9月、九月中下旬、3/15 等；
+   模糊时段取代表日（上旬≈5日、中旬≈15日、下旬≈28日、中下旬≈20日、仅月份≈15日）；
+   无年份时优先沿用购买日期年份，否则用当前年；解析失败返回 null（排序时沉底） */
+const CN_MONTHS={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'十一':11,'十二':12,'腊':12};
+const SHIP_SEG='中下旬|上下旬|上旬|中旬|下旬|底|末|初';
+function shipSegDay(seg){
+  if(seg==='上旬'||seg==='初')return 5;
+  if(seg==='下旬'||seg==='底'||seg==='末')return 28;
+  if(seg==='中下旬')return 20;
+  return 15;
+}
+function parseShipDate(str,buyDateStr){
+  if(str==null)return null;
+  const s=String(str).trim();
+  if(!s)return null;
+  let y=null,m=null,d=null,mt;
+  if((mt=s.match(/(\d{4})\s*[年\/\-.]\s*(\d{1,2})(?:\s*[月\/\-.]\s*(\d{1,2})\s*[日号]?)?/))){y=+mt[1];m=+mt[2];d=mt[3]?+mt[3]:15}
+  else if((mt=s.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]?/))){m=+mt[1];d=+mt[2]}
+  else if((mt=s.match(new RegExp('([一二三四五六七八九十]{1,2})\\s*月\\s*('+SHIP_SEG+')?')))){m=CN_MONTHS[mt[1]]||null;d=mt[2]?shipSegDay(mt[2]):15}
+  else if((mt=s.match(new RegExp('(\\d{1,2})\\s*月\\s*('+SHIP_SEG+')?')))){m=+mt[1];d=mt[2]?shipSegDay(mt[2]):15}
+  else if((mt=s.match(/(\d{1,2})\s*[\/\-.]\s*(\d{1,2})/))){m=+mt[1];d=+mt[2]}
+  else return null;
+  if(!m||m<1||m>12||!d||d<1||d>31)return null;
+  if(y==null){
+    const mm=/^(19|20)\d{2}/.exec(String(buyDateStr||''));
+    y=mm?+mm[0]:new Date().getFullYear();
+  }
+  return{ts:new Date(y,m-1,d).getTime()};
+}
 async function renderPurchases(){
   $('#app').innerHTML=
     '<div class="page">'+
@@ -474,8 +521,11 @@ async function renderPurchases(){
       '<div id="p-summary"></div>'+
       '<div class="filters">'+
         '<input id="pf-kw" type="search" placeholder="搜索购买内容 / 余量明细" value="'+esc(PF.kw)+'">'+
+        ((PF.kw||PF.method||PF.arrival||PF.sort!=='default')?'<button type="button" class="pf-reset" onclick="pfReset()">↺ 重置</button>':'')+
         '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-method" onclick="ddToggle(\'method\',this)"><span class="dd-val '+(PF.method?'on':'ph')+'">'+(PF.method?esc(PF.method):'全部购买方式')+'</span><svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>'+
         '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-arrival" onclick="ddToggle(\'arrival\',this)"><span class="dd-val '+(PF.arrival?'on':'ph')+'">'+(PF.arrival?esc(PF.arrival):'全部到货情况')+'</span><svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>'+
+        '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-sort" onclick="ddToggle(\'sort\',this)"><span class="dd-val '+(PF.sort!=='default'?'on':'ph')+'">'+(PF.sort!=='default'?esc((PF_SORTS.find(x=>x.v===PF.sort)||{}).label):'默认排序')+'</span><svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>'+
+        '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-dir" onclick="pfFlipDir()" style="visibility:'+(PF.sort==='default'?'hidden':'visible')+'"><span class="dd-val">'+esc(PF.sort==='default'?'':PF_DIR_LABEL[PF.sort][PF.dir])+'</span></button></div>'+
       '</div>'+
       '<div id="p-list"></div>'+
     '</div>';
@@ -520,17 +570,41 @@ function ddPick(el){
 /* 筛选下拉 */
 const DDC={
   method:()=>({ph:'全部购买方式',list:ENUMS.methods,val:PF.method,set:v=>PF.method=v}),
-  arrival:()=>({ph:'全部到货情况',list:ENUMS.arrivals,val:PF.arrival,set:v=>PF.arrival=v})
+  arrival:()=>({ph:'全部到货情况',list:ENUMS.arrivals,val:PF.arrival,set:v=>PF.arrival=v}),
+  sort:()=>({ph:'默认排序',list:PF_SORTS,val:PF.sort,set:v=>PF.sort=v||'default'})
 };
 function ddToggle(key,btn){
   if(DDCONF&&DDCONF.btn===btn){ddClose();return}
   const c=DDC[key]();
-  const items=[{v:'',label:c.ph,on:c.val===''}].concat(c.list.map(x=>({v:x,label:x,on:x===c.val})));
+  const items=[{v:'',label:c.ph,on:c.val===''}].concat(c.list.map(x=>{
+    const isObj=typeof x==='object';
+    return{v:isObj?x.v:x,label:isObj?x.label:x,on:(isObj?x.v:x)===c.val};
+  }));
   ddOpen(btn,items,v=>{
     c.set(v);pfApply();
     const lab=btn.querySelector('.dd-val');
     if(lab){lab.textContent=v||c.ph;lab.className='dd-val '+(v?'on':'ph')}
+    if(key==='sort')pfSyncDir();
   });
+}
+/* 排序方向切换 / 同步 / 重置 */
+function pfSyncDir(){
+  const b=document.getElementById('dd-btn-dir');if(!b)return;
+  if(PF.sort==='default'){b.style.visibility='hidden';return}
+  b.style.visibility='visible';
+  const lab=b.querySelector('.dd-val');
+  const m=PF_DIR_LABEL[PF.sort];
+  if(lab&&m)lab.textContent=PF.dir==='asc'?m.asc:m.desc;
+}
+function pfFlipDir(){
+  if(PF.sort==='default')return;
+  PF.dir=PF.dir==='asc'?'desc':'asc';
+  pfPersist();pfSyncDir();pfApply();
+}
+function pfReset(){
+  PF={kw:'',method:'',arrival:'',sort:'default',dir:'desc'};
+  pfPersist();
+  renderPurchases();
 }
 /* 表单下拉（替代原生 select；隐藏 input 保留原 id，表单读取逻辑不变） */
 function ddField(id,key,selected,ph){
@@ -553,7 +627,7 @@ function ddFormToggle(id,key,btn){
   });
 }
 async function pfApply(){
-  const all=(await dbAll('purchases')).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const all=await dbAll('purchases');
   const list=all.filter(p=>{
     if(PF.method&&p.method!==PF.method)return false;
     if(PF.arrival&&p.arrival!==PF.arrival)return false;
@@ -561,6 +635,28 @@ async function pfApply(){
       if(((p.content||'')+' '+(p.remainingDetail||'')).toLowerCase().indexOf(kw)<0)return false}
     return true;
   });
+  /* 排序：默认=最新录入；购买日期/出荷日期=空值沉底 */
+  if(PF.sort==='buyDate'){
+    list.sort((a,b)=>{
+      const av=a.buyDate||'',bv=b.buyDate||'';
+      if(!av&&!bv)return 0;
+      if(!av)return 1;
+      if(!bv)return -1;
+      return PF.dir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
+    });
+  }else if(PF.sort==='shipDate'){
+    const key=p=>{const r=parseShipDate(p.shipDate,p.buyDate);return r?r.ts:null};
+    list.sort((a,b)=>{
+      const av=key(a),bv=key(b);
+      if(av==null&&bv==null)return 0;
+      if(av==null)return 1;
+      if(bv==null)return -1;
+      return PF.dir==='asc'?av-bv:bv-av;
+    });
+  }else{
+    list.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  }
+  pfPersist();
   let tc=0,tr=0;
   list.forEach(p=>{tc+=costOf(p);tr+=recoveredOf(p)});
   $('#p-summary').innerHTML=
@@ -571,14 +667,15 @@ async function pfApply(){
     '</div>';
   $('#p-list').innerHTML=list.length?list.map(p=>{
     const cost=costOf(p),rem=remainingOf(p),ss=salesSum(p),rec=recoveredOf(p);
+    /* 回本/亏损/盈利仅在标注卖完后判定；未标注一律「售卖中」 */
     const badge=p.soldOut?
       (rem>0.005?'<span class="badge red">已卖完 · 亏损</span>':(rem<-0.005?'<span class="badge green">已卖完 · 盈利</span>':'<span class="badge blue">已卖完 · 已回本</span>')):
-      '<span class="badge '+(rem>0.005?'red':'green')+'">'+(rem>0.005?'未回本':'已回本')+'</span>';
+      '<span class="badge blue">售卖中</span>';
     return '<div class="card'+(p.soldOut?' soldout':'')+'" onclick="nav(\'#/purchase/'+p.id+'\')">'+
       '<div class="row1"><span class="title">'+esc(p.content)+'</span>'+badge+'</div>'+
       '<div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
         '<span class="badge blue">'+esc(p.arrival)+'</span>'+
-        '<span class="muted small">'+esc(p.buyDate||'未填日期')+' · '+esc(p.method)+(p.groupDetail?' · '+esc(p.groupDetail):'')+'</span>'+
+        '<span class="muted small">'+esc(p.buyDate||'未填日期')+(p.shipDate?(' · 出荷 '+esc(p.shipDate)):'')+' · '+esc(p.method)+(p.groupDetail?' · '+esc(p.groupDetail):'')+'</span>'+
       '</div>'+
       '<div class="nums"><span>成本 <b>¥'+fmt(cost)+'</b></span><span>回收 <b>¥'+fmt(rec)+'</b></span><span class="'+(rem>0.005?'red':'green')+'">剩余 <b>¥'+fmt(rem)+'</b></span><span>已售 <b>'+ss.count+'</b>笔</span></div>'+
     '</div>';
@@ -601,10 +698,10 @@ async function renderPurchaseForm(id){
           '<div class="field"><label>购买方式 *</label>'+ddField('f-method','methods',rec?rec.method:null,'请选择')+'</div>'+
           '<div class="field"><label>到货情况 *</label>'+ddField('f-arrival','arrivals',rec?rec.arrival:null,'请选择')+'</div>'+
         '</div>'+
-        '<div class="field"><label>出荷日期</label><input id="f-shipdate" type="text" value="'+esc(rec?rec.shipDate:'')+'" placeholder="如 2026/3/15"></div>'+
+        '<div class="field"><label>出荷日期 <span class="hint">支持大致范围，如「九月中下旬」</span></label><input id="f-shipdate" type="text" value="'+esc(rec?rec.shipDate:'')+'" placeholder="如 2026/3/15 或 9月中下旬"></div>'+
         '<div class="field"><label>购买日期</label><input id="f-buydate" type="date" value="'+esc(rec?rec.buyDate||'':todayStr())+'"></div>'+
         '<div class="field"><label>跟团明细</label>'+ddField('f-group','groups',rec?rec.groupDetail:null,'不选择')+'</div>'+
-        '<div class="field"><label>余量明细 *</label><textarea id="f-remdetail" rows="3" placeholder="还剩多少没卖出">'+esc(rec?rec.remainingDetail:'')+'</textarea></div>'+
+        '<div class="field"><label>余量明细 <span class="hint">未到货可留空</span></label><textarea id="f-remdetail" rows="3" placeholder="还剩多少没卖出">'+esc(rec?rec.remainingDetail:'')+'</textarea></div>'+
       '</div>'+
       '<div class="card">'+
         '<div class="card-title">金额</div>'+
@@ -613,7 +710,7 @@ async function renderPurchaseForm(id){
           '<div class="field"><label>汇率（自动）</label><div class="readonly-field" id="f-rate">—</div></div>'+
         '</div>'+
         '<div class="calc">'+
-          '<div class="field"><label>实付金额（元）*</label><input id="f-paid" type="number" inputmode="decimal" step="any" min="0" value="'+(rec&&rec.paidAmount!=null?rec.paidAmount:'')+'"></div>'+
+          '<div class="field"><label>实付金额（元）<span class="hint">未出账可留空</span></label><input id="f-paid" type="number" inputmode="decimal" step="any" min="0" value="'+(rec&&rec.paidAmount!=null?rec.paidAmount:'')+'" placeholder="未出账可留空"></div>'+
           '<div class="field"><label>成本（自动）</label><div class="readonly-field" id="f-cost">0.00</div></div>'+
         '</div>'+
         '<div class="calc">'+
@@ -656,8 +753,6 @@ async function pfSave(){
   if(!content)return toast('请填写购买内容');
   if(!method)return toast('请选择购买方式');
   if(!arrival)return toast('请选择到货情况');
-  if(paid==null||paid<=0)return toast('请填写实付金额');
-  if(!rem)return toast('请填写余量明细');
   const rec={
     id:PF_STATE.editingId||uid(),
     createdAt:PF_STATE.createdAt||Date.now(),
@@ -690,7 +785,6 @@ async function renderPurchaseDetail(id){
   const p=await dbGet('purchases',id);
   if(!p)return nav('#/purchases');
   const cost=costOf(p),rate=rateOf(p),ss=salesSum(p),rem=remainingOf(p);
-  const statusTxt=rem>0.005?('未回收 ¥'+fmt(rem)):(rem<-0.005?('已回本，盈余 ¥'+fmt(-rem)):'已全部收回');
   const so=!!p.soldOut;
   let bannerCls,bannerLabel,bannerVal;
   if(so){
@@ -698,8 +792,9 @@ async function renderPurchaseDetail(id){
     else if(rem<-0.005){bannerCls=' ok';bannerLabel='已卖完 · 盈利';bannerVal=fmt(-rem)}
     else{bannerCls=' ok';bannerLabel='已卖完 · 刚好回本';bannerVal='0.00'}
   }else{
+    /* 未标注卖完：只展示剩余成本事实，不做回本/盈利判定 */
     bannerCls=rem>0.005?'':' ok';
-    bannerLabel='剩余成本 · '+statusTxt;
+    bannerLabel='剩余成本 · '+(rem>0.005?'待回收':'回收已覆盖');
     bannerVal=fmt(rem);
   }
   const soD=p.soldOutAt?new Date(p.soldOutAt):null;
@@ -711,13 +806,13 @@ async function renderPurchaseDetail(id){
     ['出荷日期',esc(p.shipDate)||'—'],
     ['购买日期',esc(p.buyDate)||'—'],
     ['日元金额',(p.jpyAmount!=null?('¥'+p.jpyAmount):'—')],
-    ['实付金额','¥'+fmt(p.paidAmount)],
+    ['实付金额',(p.paidAmount==null?'—（未出账）':'¥'+fmt(p.paidAmount))],
     ['汇率',(rate!=null?rate.toFixed(3):'—')],
     ['国际/退补','¥'+fmt(p.intlAdj)],
     ['国内',(p.domestic!=null?('¥'+fmt(p.domestic)):'—')],
     ['成本','¥'+fmt(cost)],
     ['跟团明细',esc(p.groupDetail)||'—'],
-    ['余量明细',esc(p.remainingDetail)]
+    ['余量明细',esc(p.remainingDetail)||'—']
   ];
   $('#app').innerHTML=
     '<div class="subheader"><button class="iconbtn" onclick="nav(\'#/purchases\')">'+BACK_SVG+'</button><h1>'+esc(p.content)+'</h1><button class="btn sm ghost" onclick="nav(\'#/purchase-form/'+p.id+'\')">编辑</button></div>'+
@@ -841,6 +936,12 @@ async function saleDelete(pid,sid){
 }
 
 /* ================= 旅程列表 ================= */
+/* 旅程天数（含首尾）：2026/3/1~3/3 = 3 天；结束早于开始或未填时返回 null */
+const tripDays=(s,e)=>{
+  if(!s||!e)return null;
+  const n=Math.round((new Date(e+'T00:00')-new Date(s+'T00:00'))/86400000)+1;
+  return n>0?n:null;
+};
 async function renderTrips(){
   const trips=(await dbAll('trips')).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   $('#app').innerHTML=
@@ -849,9 +950,10 @@ async function renderTrips(){
       (trips.length?trips.map(t=>{
         const exps=t.expenses||[];
         const total=exps.reduce((a,e)=>a+num(e.amount),0);
+        const days=tripDays(t.startDate,t.endDate);
         return '<div class="card" onclick="nav(\'#/trip/'+t.id+'\')">'+
           '<div class="row1"><span class="title">'+esc(t.destination)+'</span><span class="badge blue">'+exps.length+'笔</span></div>'+
-          '<div class="muted small" style="margin-top:4px">'+esc(t.startDate||'—')+(t.endDate?(' ~ '+esc(t.endDate)):' 起')+'</div>'+
+          '<div class="muted small" style="margin-top:4px">'+esc(t.startDate||'—')+(t.endDate?(' ~ '+esc(t.endDate)):' 起')+(days?(' · '+days+'天'):'')+'</div>'+
           '<div class="nums"><span>总支出 <b>¥'+fmt(total)+'</b></span></div>'+
         '</div>';
       }).join(''):'<div class="empty">'+EMPTY_ICON+'暂无旅程<br>点击右上角「新建」创建</div>')+
@@ -866,8 +968,20 @@ function openTripModal(trip){
       '<div class="field"><label>开始日期</label><input id="t-start" type="date" value="'+esc(trip?trip.startDate||'':todayStr())+'"></div>'+
       '<div class="field"><label>结束日期</label><input id="t-end" type="date" value="'+esc(trip?trip.endDate||'':'')+'"></div>'+
     '</div>'+
+    '<div class="field"><label>旅程天数（自动）</label><div class="readonly-field" id="t-days">—</div></div>'+
     '<div class="modal-btns"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn primary" onclick="tripSave()">保存</button></div>'
   );
+  $('#t-start').addEventListener('change',tripCalcDays);
+  $('#t-end').addEventListener('change',tripCalcDays);
+  tripCalcDays();
+}
+function tripCalcDays(){
+  const el=$('#t-days');if(!el)return;
+  const s=$('#t-start').value,e=$('#t-end').value;
+  if(!s||!e){el.textContent='—';el.style.color='';return}
+  const n=tripDays(s,e);
+  if(n==null){el.textContent='结束日期早于开始日期';el.style.color='var(--red)';return}
+  el.textContent='共 '+n+' 天（含首尾）';el.style.color='';
 }
 async function tripSave(){
   const dest=$('#t-dest').value.trim();
@@ -907,13 +1021,14 @@ async function renderTripDetail(id){
     const c=e.category||'未知';byCat[c]=(byCat[c]||0)+num(e.amount);
   });
   const chips=o=>Object.keys(o).map(k=>'<span class="stat-chip">'+esc(k)+' ¥'+fmt(o[k])+'</span>').join('');
+  const days=tripDays(t.startDate,t.endDate);
   $('#app').innerHTML=
     '<div class="subheader"><button class="iconbtn" onclick="nav(\'#/trips\')">'+BACK_SVG+'</button><h1>'+esc(t.destination)+'</h1>'+
-      '<button class="btn sm ghost" onclick="openTripEdit(\''+t.id+'\')">编辑</button>'+
-      '<button class="btn sm danger" onclick="tripDelete(\''+t.id+'\')">删除</button></div>'+
+    '<button class="btn sm ghost" onclick="openTripEdit(\''+t.id+'\')">编辑</button>'+
+    '<button class="btn sm danger" onclick="tripDelete(\''+t.id+'\')">删除</button></div>'+
     '<div class="page no-tab">'+
       '<div class="trip-banner">'+
-        '<div class="l">'+esc(t.startDate||'—')+(t.endDate?(' ~ '+esc(t.endDate)):' 起')+' · 总支出</div>'+
+        '<div class="l">'+esc(t.startDate||'—')+(t.endDate?(' ~ '+esc(t.endDate)):' 起')+(days?(' · 共'+days+'天'):'')+' · 总支出</div>'+
         '<div class="v"><span class="cur">¥</span>'+fmt(total)+'</div>'+
       '</div>'+
       '<div class="card">'+
