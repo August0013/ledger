@@ -3,39 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4f5f9">
+<meta name="theme-color" content="#eef4fb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>记账</title>
 <style>
 :root{
-  --bg:#f4f5f9;--bg-deep:#ebedf3;--card:#ffffff;--card-2:#f8f9fc;
-  --text:#181b28;--muted:#687083;--faint:#9aa1b4;
-  --border:rgba(24,27,40,.08);--border-2:rgba(24,27,40,.14);
-  --primary:#5a62f5;--red:#df3e43;--red-deep:#d2383d;--green:#149a6b;--green-deep:#0e7f58;
-  --gold:#b3872e;--gold-2:#8f6a1f;
-  --numf:"DIN Alternate","Bahnschrift","Segoe UI",system-ui,sans-serif;
-  --radius:16px;
+  --bg:#eef4fb;
+  --card:#ffffff;--card-2:#f3f7fc;--tint:#e9f3fe;
+  --text:#1b1c1f;--muted:#7d8698;--faint:#a9b3c2;
+  --border:rgba(27,28,31,.07);--border-2:rgba(27,28,31,.14);
+  --blue:#4a9eff;--blue-deep:#2b7fd9;
+  --primary:#1e2126;--red:#e25c4e;--red-deep:#c7402f;--green:#23a06d;--green-deep:#17825a;
+  --sans:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  --serif:var(--sans);--mono:var(--sans);--numf:var(--sans);
+  --radius:16px;--shadow:0 5px 18px rgba(38,76,130,.07);
   color-scheme:light;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+input,select,textarea,button{font-family:inherit}
 html{-webkit-text-size-adjust:100%}
-body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);font-size:15px;font-variant-numeric:tabular-nums;
+body{font-family:var(--sans);color:var(--text);font-size:15px;font-variant-numeric:tabular-nums;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
-  background:var(--bg-deep);background-image:radial-gradient(60% 40% at 50% 0%,rgba(90,98,245,.05),transparent 70%)}
-/* 细腻纸张噪点 */
-body::after{content:'';position:fixed;inset:0;z-index:2000;pointer-events:none;opacity:.03;mix-blend-mode:multiply;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-#app{max-width:520px;margin:0 auto;min-height:100dvh;position:relative;
-  background:radial-gradient(70% 300px at 88% 0,rgba(139,92,246,.06),transparent 60%),
-             radial-gradient(60% 260px at 6% 6%,rgba(90,98,245,.05),transparent 60%),
-             radial-gradient(120% 500px at 50% -200px,rgba(90,98,245,.05),transparent 60%),var(--bg);
-  border-left:1px solid rgba(24,27,40,.05);border-right:1px solid rgba(24,27,40,.05);
-  box-shadow:0 0 60px rgba(24,27,40,.08)}
+  background:var(--bg)}
+/* 弥散光晕（柔蓝天光 → 粉晕） */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(640px 420px at 88% -8%,rgba(166,208,255,.5),transparent 62%),
+    radial-gradient(520px 460px at -12% 24%,rgba(196,222,255,.36),transparent 62%),
+    radial-gradient(560px 440px at 106% 66%,rgba(255,213,231,.4),transparent 62%),
+    radial-gradient(500px 420px at -6% 104%,rgba(224,211,246,.36),transparent 62%)}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;position:relative;z-index:1}
 .hidden{display:none!important}
-::selection{background:rgba(90,98,245,.18)}
+::selection{background:rgba(74,158,255,.22)}
 ::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-thumb{background:rgba(24,27,40,.18);border-radius:3px}
+::-webkit-scrollbar-thumb{background:rgba(27,28,31,.2);border-radius:3px}
 ::-webkit-scrollbar-track{background:transparent}
 .page{padding:16px 16px calc(104px + env(safe-area-inset-bottom))}
 .page.no-tab{padding-bottom:44px}
@@ -56,104 +58,98 @@ body::after{content:'';position:fixed;inset:0;z-index:2000;pointer-events:none;o
 #p-list .card:nth-child(7){animation-delay:.24s}
 #p-list .card:nth-child(n+8){animation-delay:.28s}
 @keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.kicker{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--gold);margin-bottom:6px}
-.page-header h1{font-size:24px;font-weight:800;letter-spacing:-.4px;
-  background:linear-gradient(135deg,#181b28 25%,#4c53d4 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.kicker{font-size:11px;font-weight:700;letter-spacing:3.5px;color:var(--blue);margin-bottom:7px}
+.page-header h1{font-size:24px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
 .subheader{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;
-  background:rgba(246,247,251,.85);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);
-  padding:10px 12px;border-bottom:1px solid var(--border);box-shadow:0 8px 24px -16px rgba(24,27,40,.18)}
-.subheader h1{font-size:16px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.2px}
-.iconbtn{width:36px;height:36px;border:1px solid var(--border);background:rgba(24,27,40,.04);border-radius:11px;
-  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex:none;transition:.15s}
-.iconbtn:hover{border-color:var(--border-2);background:rgba(24,27,40,.07)}
+  background:rgba(238,244,251,.86);backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);
+  padding:10px 12px;border-bottom:1px solid rgba(27,28,31,.06)}
+.subheader h1{font-size:17px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:36px;height:36px;border:1px solid rgba(27,28,31,.08);background:rgba(255,255,255,.9);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex:none;transition:.15s;box-shadow:0 2px 8px rgba(38,76,130,.06)}
+.iconbtn:hover{border-color:rgba(74,158,255,.5)}
 .iconbtn:active{transform:scale(.92)}
 .iconbtn svg{width:18px;height:18px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:12px;position:relative;
-  box-shadow:0 1px 2px rgba(24,27,40,.03),0 10px 28px -16px rgba(24,27,40,.14);
-  transition:border-color .18s,transform .18s,box-shadow .18s}
+.card{background:var(--card);border:none;border-radius:var(--radius);padding:16px;margin-bottom:14px;position:relative;
+  box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s}
 .card[onclick]{cursor:pointer}
-.card[onclick]:hover{border-color:var(--border-2);transform:translateY(-1px);
-  box-shadow:0 2px 4px rgba(24,27,40,.04),0 16px 34px -16px rgba(24,27,40,.2)}
-.card[onclick]:active{transform:scale(.985);border-color:rgba(90,98,245,.45)}
-.card-title{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center}
-.card-title::before{content:'';width:3px;height:13px;border-radius:2px;margin-right:8px;flex:none;
-  background:linear-gradient(180deg,#7c5cf0,#5a62f5)}
+.card[onclick]:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(38,76,130,.12)}
+.card[onclick]:active{transform:scale(.985)}
+/* 邮戳印章（已卖完） */
+.card.soldout::after{content:'售罄';position:absolute;top:10px;right:12px;width:52px;height:52px;border-radius:50%;
+  border:2px solid rgba(209,63,51,.8);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.9),inset 0 0 0 4.5px rgba(209,63,51,.5);
+  display:flex;align-items:center;justify-content:center;color:#d13f33;font-weight:800;font-size:12.5px;
+  letter-spacing:1.5px;text-indent:1.5px;transform:rotate(-12deg);background:rgba(255,255,255,.72);z-index:2;pointer-events:none}
+.card-title{font-size:15.5px;font-weight:700;margin-bottom:12px;display:flex;align-items:center}
+.card-title::before{content:'';width:6px;height:6px;border-radius:3px;margin-right:8px;flex:none;background:var(--blue)}
 .card .hint{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6}
 .muted{color:var(--muted)}.small{font-size:13px}.red{color:var(--red)}.green{color:var(--green)}
 .empty{text-align:center;color:var(--muted);padding:56px 0;font-size:14px;line-height:1.9}
-.empty svg{display:block;width:44px;height:44px;opacity:.35;margin:0 auto 14px}
-/* 汇总横幅 */
-.summary{display:flex;border-radius:var(--radius);padding:18px 8px 16px;margin-bottom:14px;position:relative;overflow:hidden;
-  background:radial-gradient(120% 170% at 0% 0%,rgba(124,92,240,.07),transparent 55%),
-             radial-gradient(120% 170% at 100% 0%,rgba(90,98,245,.05),transparent 55%),var(--card);
-  border:1px solid var(--border);box-shadow:0 1px 2px rgba(24,27,40,.03),0 10px 28px -16px rgba(24,27,40,.14)}
-.summary::after{content:'';position:absolute;left:14%;right:14%;top:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(179,135,46,.45),transparent)}
+.empty svg{display:block;width:44px;height:44px;opacity:.45;margin:0 auto 14px;color:#8fb6e0}
+/* 汇总横幅（淡蓝渐变 · 大数金额） */
+.summary{display:flex;border-radius:var(--radius);padding:18px 8px 16px;margin-bottom:14px;position:relative;
+  background:linear-gradient(150deg,#e9f3fe 0%,#f7fbff 70%);box-shadow:var(--shadow)}
 .summary>div{flex:1;text-align:center;min-width:0}
-.summary>div+div{border-left:1px solid var(--border)}
-.summary .v{font-family:var(--numf);font-size:21px;font-weight:700;word-break:break-all;padding:0 4px;letter-spacing:.3px;
-  background:linear-gradient(160deg,#c9a45c,#b3872e 55%,#8f6a1f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.summary .v .cur{font-size:.6em;font-weight:600;margin-right:2px;opacity:.85}
-.summary .l{font-size:10px;color:var(--faint);margin-top:6px;letter-spacing:2px}
-/* 状态横幅（白卡 + 色彩晕染） */
-.remaining-banner{border-radius:var(--radius);padding:18px;margin-bottom:14px;position:relative;overflow:hidden;
-  background:radial-gradient(130% 180% at 0% 0%,rgba(223,62,67,.06),transparent 55%),var(--card);
-  border:1px solid rgba(223,62,67,.3);box-shadow:0 1px 2px rgba(24,27,40,.03),0 10px 28px -16px rgba(24,27,40,.14)}
-.remaining-banner.ok{background:radial-gradient(130% 180% at 0% 0%,rgba(20,154,107,.06),transparent 55%),var(--card);
-  border-color:rgba(20,154,107,.32)}
-.remaining-banner .l{font-size:11px;color:var(--muted);letter-spacing:.6px}
-.remaining-banner .v{font-family:var(--numf);font-size:34px;font-weight:700;margin:5px 0 9px;color:var(--red);letter-spacing:.5px}
+.summary>div+div{border-left:1px solid rgba(74,158,255,.18)}
+.summary .v{font-size:21px;font-weight:800;word-break:break-all;padding:0 4px;color:var(--text);display:inline-block}
+.summary .v .cur{font-size:.62em;font-weight:700;margin-right:2px;opacity:.65}
+.summary .l{font-size:11px;color:var(--muted);margin-top:7px;letter-spacing:1px}
+/* 状态横幅（Soft UI 淡色底） */
+.remaining-banner{border-radius:var(--radius);padding:18px 16px;margin-bottom:14px;position:relative;
+  background:linear-gradient(150deg,#eef6ff,#fdf5f3);box-shadow:var(--shadow)}
+.remaining-banner.ok{background:linear-gradient(150deg,#e9f8f0,#f4fbff)}
+.remaining-banner .l{font-size:11.5px;color:var(--muted);letter-spacing:1px}
+.remaining-banner .v{font-size:34px;font-weight:800;margin:6px 0 10px;color:var(--red)}
 .remaining-banner.ok .v{color:var(--green)}
-.remaining-banner .v .cur{font-size:.55em;font-weight:600;margin-right:4px;opacity:.75}
-.remaining-banner .d{font-size:12px;color:var(--faint);line-height:1.65}
-.trip-banner{border-radius:var(--radius);padding:18px;margin-bottom:14px;position:relative;overflow:hidden;
-  background:radial-gradient(130% 180% at 0% 0%,rgba(90,98,245,.08),transparent 55%),var(--card);
-  border:1px solid rgba(90,98,245,.28);box-shadow:0 1px 2px rgba(24,27,40,.03),0 10px 28px -16px rgba(24,27,40,.14)}
-.trip-banner .l{font-size:12px;color:var(--muted)}
-.trip-banner .v{font-family:var(--numf);font-size:30px;font-weight:700;margin-top:6px;letter-spacing:.3px;
-  background:linear-gradient(160deg,#c9a45c,#b3872e 55%,#8f6a1f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.trip-banner .v .cur{font-size:.55em;font-weight:600;margin-right:4px;opacity:.8}
+.remaining-banner .v .cur{font-size:.55em;font-weight:700;margin-right:4px;opacity:.7}
+.remaining-banner .d{font-size:12px;color:var(--faint);line-height:1.7}
+.trip-banner{border-radius:var(--radius);padding:18px 16px;margin-bottom:14px;
+  background:linear-gradient(150deg,#e9f3fe,#f7fbff);box-shadow:var(--shadow)}
+.trip-banner .l{font-size:11.5px;color:var(--muted);letter-spacing:1px}
+.trip-banner .v{font-size:30px;font-weight:800;margin-top:6px;color:var(--text);display:inline-block}
+.trip-banner .v .cur{font-size:.55em;font-weight:700;margin-right:4px;opacity:.7}
+/* 详情页大邮戳 */
+.stamp-big{position:absolute;top:14px;right:16px;width:64px;height:64px;border-radius:50%;
+  border:2.5px solid rgba(209,63,51,.75);
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.85),inset 0 0 0 5.5px rgba(209,63,51,.45);
+  display:flex;align-items:center;justify-content:center;color:#d13f33;font-weight:800;font-size:15px;
+  letter-spacing:2px;text-indent:2px;transform:rotate(12deg);background:rgba(255,255,255,.5);pointer-events:none}
 /* 按钮 */
-.btn{border:none;border-radius:12px;padding:10px 16px;font-size:15px;font-weight:600;cursor:pointer;position:relative;overflow:hidden;
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .12s,box-shadow .2s,background .15s,filter .15s}
+.btn{border:none;border-radius:13px;padding:11px 18px;font-size:15px;font-weight:600;cursor:pointer;position:relative;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .12s,background .15s,box-shadow .15s,border-color .15s,color .15s}
 .btn:active{transform:scale(.97)}
-.btn:focus-visible,.iconbtn:focus-visible{outline:2px solid rgba(90,98,245,.55);outline-offset:2px}
-.btn.primary{background:linear-gradient(135deg,#6a72ff 0%,#5a62f5 45%,#7c5cf0 100%);color:#fff;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 6px 16px rgba(90,98,245,.35)}
-.btn.primary:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 2px 8px rgba(90,98,245,.28)}
-.btn.primary::after{content:'';position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.3) 50%,transparent 70%);
-  transform:translateX(-130%);transition:transform .55s ease}
-.btn.ghost{background:rgba(24,27,40,.05);color:var(--text);border:1px solid var(--border)}
-.btn.danger{background:linear-gradient(135deg,#f0565b,#dc3444);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 4px 14px rgba(223,62,67,.25)}
-.btn.danger-ghost{background:rgba(223,62,67,.07);color:var(--red);border:1px solid rgba(223,62,67,.22)}
+.btn:focus-visible,.iconbtn:focus-visible{outline:2px solid rgba(74,158,255,.55);outline-offset:2px}
+.btn.primary{background:#1e2126;color:#fff;box-shadow:0 5px 14px rgba(30,33,38,.22)}
+.btn.ghost{background:#fff;color:var(--text);border:1px solid rgba(27,28,31,.1);box-shadow:0 2px 8px rgba(38,76,130,.05)}
+.btn.danger{background:var(--red);color:#fff;box-shadow:0 5px 14px rgba(226,92,78,.28)}
+.btn.danger-ghost{background:rgba(226,92,78,.1);color:var(--red-deep)}
 @media(hover:hover){
-  .btn.primary:hover{filter:brightness(1.08)}
-  .btn.primary:hover::after{transform:translateX(130%)}
-  .btn.ghost:hover{background:rgba(24,27,40,.08);border-color:var(--border-2)}
-  .btn.danger-ghost:hover{background:rgba(223,62,67,.12)}
+  .btn.primary:hover{background:#33373e}
+  .btn.ghost:hover{background:#f6faff;border-color:rgba(74,158,255,.45)}
+  .btn.danger-ghost:hover{background:rgba(226,92,78,.16)}
 }
 .btn.block{width:100%;margin-bottom:10px}
 .card>.btn.block:last-child,.page>.btn.block:last-child{margin-bottom:0}
-.btn.sm{padding:6px 12px;font-size:13px;border-radius:9px}
+.btn.sm{padding:6px 13px;font-size:13px;border-radius:10px}
 /* 表单 */
 .field{margin-bottom:13px}
 .field:last-child{margin-bottom:0}
-.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:7px;font-weight:600;letter-spacing:1.2px}
-.field input[type=text],.field input[type=number],.field input[type=date],.field input[type=datetime-local],.field select{
-  width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:12px;font-size:16px;
-  background:#f2f3f8;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
-.field input:focus,.field select:focus{border-color:rgba(90,98,245,.55);box-shadow:0 0 0 3px rgba(90,98,245,.13);background:#fff}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:600}
+.field input[type=text],.field input[type=number],.field input[type=date],.field input[type=datetime-local],.field select,.field textarea{
+  width:100%;padding:12px 14px;border:1.5px solid transparent;border-radius:12px;font-size:16px;
+  background:#f2f6fb;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,158,255,.16);background:#fff}
+.field textarea{min-height:76px;resize:vertical;line-height:1.65;font-family:inherit}
 .field input::placeholder{color:var(--faint)}
 .field input[type=number]{appearance:textfield;-moz-appearance:textfield}
 .field input[type=number]::-webkit-outer-spin-button,.field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .field select{appearance:none;-webkit-appearance:none;padding-right:38px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b93a7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a9b3c2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 13px center;background-size:15px}
 .field select option{background:#fff;color:var(--text)}
-.readonly-field{background:rgba(179,135,46,.06);border:1px solid rgba(179,135,46,.28);border-radius:12px;
-  padding:11px 13px;font-family:var(--numf);font-size:16px;font-weight:700;color:var(--gold);min-height:46px;display:flex;align-items:center;letter-spacing:.3px}
+.readonly-field{background:var(--tint);border:none;border-radius:12px;
+  padding:12px 14px;font-size:16px;font-weight:700;color:var(--text);min-height:48px;display:flex;align-items:center}
 .calc{display:flex;gap:10px}
 .calc .field{flex:1;min-width:0}
 .hint{font-size:12px;color:var(--muted);font-weight:400}
@@ -161,108 +157,121 @@ body::after{content:'';position:fixed;inset:0;z-index:2000;pointer-events:none;o
 .thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .thumb{position:relative;width:74px;height:74px;border-radius:12px;overflow:hidden;flex:none;border:1px solid var(--border)}
 .thumb img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;display:block}
-.thumb button{position:absolute;top:3px;right:3px;width:21px;height:21px;border:none;border-radius:50%;
-  background:rgba(8,9,14,.65);color:#fff;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
-  backdrop-filter:blur(4px);transition:background .15s}
-.thumb button:hover{background:var(--red-deep)}
-.addimg{width:76px;height:76px;border:1.5px dashed rgba(24,27,40,.2);border-radius:12px;
+.thumb button{position:absolute;top:4px;right:4px;width:21px;height:21px;border:none;border-radius:50%;
+  background:rgba(30,33,38,.65);color:#fff;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;
+  transition:background .15s}
+.thumb button:hover{background:#c7402f}
+.addimg{width:76px;height:76px;border:1.5px dashed rgba(27,28,31,.22);border-radius:12px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--faint);font-size:11px;
-  cursor:pointer;background:rgba(24,27,40,.02);transition:.15s}
-.addimg:hover{border-color:rgba(90,98,245,.5);color:var(--primary);background:rgba(90,98,245,.04)}
+  cursor:pointer;background:transparent;transition:.15s}
+.addimg:hover{border-color:rgba(74,158,255,.55);color:var(--blue);background:rgba(74,158,255,.06)}
 .gallery{display:flex;flex-wrap:wrap;gap:8px}
 .gallery .thumb{width:calc(33.33% - 6px);aspect-ratio:1;height:auto}
 .mini-thumbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.mini-thumbs img{width:46px;height:46px;object-fit:cover;border-radius:10px;cursor:zoom-in;border:1px solid var(--border)}
+.mini-thumbs img{width:46px;height:46px;object-fit:cover;border-radius:8px;cursor:zoom-in;border:1px solid var(--border)}
 /* 列表卡片 */
 .row1{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.row1 .title{font-size:15px;font-weight:600;word-break:break-all}
-.badge{font-size:11px;padding:4px 10px;border-radius:999px;flex:none;font-weight:600;letter-spacing:.3px;
+.row1 .title{font-size:15.5px;font-weight:700;word-break:break-all}
+.badge{font-size:11px;padding:4px 10px;border-radius:999px;flex:none;font-weight:600;
   display:inline-flex;align-items:center;gap:5px}
-.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
-.badge.red{background:rgba(223,62,67,.07);color:var(--red);border:1px solid rgba(223,62,67,.24)}
-.badge.green{background:rgba(20,154,107,.08);color:var(--green);border:1px solid rgba(20,154,107,.24)}
-.badge.blue{background:rgba(90,98,245,.07);color:#4c53d4;border:1px solid rgba(90,98,245,.22)}
+.badge.red{background:#fde9e6;color:#d14a3c}
+.badge.green{background:#e2f6ec;color:#1d8a5e}
+.badge.blue{background:var(--tint);color:var(--blue-deep)}
 .nums{display:flex;gap:14px;margin-top:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
-.nums b{color:var(--text);font-weight:700;font-family:var(--numf);letter-spacing:.2px}
+.nums b{color:var(--text);font-weight:700}
 .nums .red{color:var(--red)}.nums .green{color:var(--green)}
-.filters{display:flex;gap:8px;margin-bottom:12px}
-.filters input{flex:2;min-width:0}
-.filters select{flex:1;min-width:0}
-.filters input,.filters select{padding:10px 12px;border:1px solid var(--border);border-radius:12px;
-  background:#fff;font-size:13px;outline:none;color:var(--text);transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;
-  box-shadow:0 1px 2px rgba(24,27,40,.03)}
-.filters input:focus,.filters select:focus{border-color:rgba(90,98,245,.55);box-shadow:0 0 0 3px rgba(90,98,245,.12)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.filters input{flex:1 1 100%;min-width:0;padding:10px 13px;border:1.5px solid transparent;border-radius:12px;
+  background:#fff;font-size:13px;outline:none;color:var(--text);transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;box-shadow:0 2px 8px rgba(38,76,130,.05)}
+.filters input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,158,255,.14)}
 .filters input::placeholder{color:var(--faint)}
-.filters select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b93a7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 10px center;background-size:13px;padding-right:30px}
-.filters select option{background:#fff;color:var(--text)}
+/* 自定义下拉（筛选，替代原生 select 弹层） */
+.dd{flex:1 1 calc(50% - 4px);min-width:0}
+.dd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:10px 12px;border:1.5px solid transparent;border-radius:12px;background:#fff;font-size:13px;font-family:inherit;
+  color:var(--text);cursor:pointer;outline:none;box-shadow:0 2px 8px rgba(38,76,130,.05);
+  transition:border-color .15s,box-shadow .15s}
+.dd-btn:hover{border-color:rgba(74,158,255,.45)}
+.dd-btn.open{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,158,255,.14)}
+.dd-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd-val.ph{color:var(--faint)}
+.dd-val.on{color:var(--blue-deep);font-weight:600}
+.dd-chev{flex:none;width:14px;height:14px;color:var(--faint);transition:transform .2s}
+.dd-btn.open .dd-chev{transform:rotate(180deg)}
+#dd-pop{position:fixed;z-index:45;background:#fff;border-radius:14px;box-shadow:0 12px 36px rgba(38,76,130,.2),0 0 0 1px rgba(27,28,31,.05);
+  padding:5px;max-height:264px;overflow-y:auto;animation:ddIn .16s ease}
+@keyframes ddIn{from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:none}}
+.dd-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-radius:9px;font-size:13.5px;cursor:pointer;color:var(--text)}
+.dd-item:hover{background:var(--tint)}
+.dd-item.on{color:var(--blue-deep);font-weight:600}
+.dd-item .ck{display:none;flex:none;width:14px;height:14px}
+.dd-item.on .ck{display:block}
+/* 表单内下拉（与输入框同款浅灰蓝填充） */
+.dd-form .dd-btn{background:#f2f6fb;box-shadow:none;font-size:16px;padding:12px 14px}
+.dd-form .dd-btn.open{background:#fff}
+.dd-form .dd-val.on{color:var(--text);font-weight:500}
+.dd-item.add{color:var(--blue-deep);margin-top:4px;position:relative}
+.dd-item.add::before{content:'';position:absolute;top:-2px;left:8px;right:8px;height:1px;background:var(--border)}
 /* 键值对 */
 .kv{display:grid;grid-template-columns:92px 1fr;row-gap:10px;column-gap:8px;font-size:14px}
-.kv dt{color:var(--faint)}
-.kv dd{word-break:break-word}
+.kv dt{color:var(--muted);font-size:12px;padding-top:2px}
+.kv dd{word-break:break-word;white-space:pre-wrap}
 /* 售卖/支出条目 */
-.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
 .sec-head h3{font-size:15px;font-weight:700;display:flex;align-items:center}
-.sec-head h3::before{content:'';width:3px;height:13px;border-radius:2px;margin-right:8px;flex:none;
-  background:linear-gradient(180deg,#7c5cf0,#5a62f5)}
-.sale-item{background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:11px 13px 11px 15px;margin-bottom:8px;font-size:14px;position:relative}
-.sale-item::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:2px;border-radius:2px;
-  background:linear-gradient(180deg,rgba(124,92,240,.55),transparent)}
-.sale-item .row1 b{word-break:break-all}
-.sale-item .meta{color:var(--muted);font-size:13px;margin-top:5px}
+.sec-head h3::before{content:'';width:6px;height:6px;border-radius:3px;margin-right:8px;flex:none;background:var(--blue)}
+.sale-item{background:var(--card-2);border:none;border-radius:12px;padding:12px 14px;margin-bottom:8px;font-size:14px;position:relative}
+.sale-item .row1 b{font-size:15px;word-break:break-all}
+.sale-item .meta{color:var(--muted);font-size:12.5px;margin-top:5px}
 .item-ops{display:flex;gap:8px;margin-top:9px}
-.exp-item{border-bottom:1px solid var(--border);padding:12px 2px;cursor:pointer;transition:background .15s;border-radius:6px}
-.exp-item:hover{background:rgba(24,27,40,.03)}
-.exp-item:last-child{border-bottom:none}
-.exp-item .amount{font-weight:700;font-family:var(--numf);font-size:15px;letter-spacing:.3px}
-.exp-item .meta{color:var(--muted);font-size:13px;margin-top:3px}
+.exp-item{padding:12px 6px;cursor:pointer;transition:background .15s;border-radius:12px}
+.exp-item:hover{background:var(--card-2)}
+.exp-item+.exp-item{border-top:1px solid var(--border)}
+.exp-item .row1 b{font-size:15px}
+.exp-item .amount{font-weight:700;font-size:15px}
+.exp-item .meta{color:var(--muted);font-size:12.5px;margin-top:3px}
 /* 统计行 */
 .stat-line{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-bottom:9px}
-.stat-line .l{color:var(--faint);flex:none;width:60px;padding-top:4px}
+.stat-line .l{color:var(--muted);flex:none;width:60px;padding-top:4px;font-size:12px}
 .stat-chips{display:flex;flex-wrap:wrap;gap:6px}
-.stat-chip{background:rgba(90,98,245,.06);color:#4c53d4;border:1px solid rgba(90,98,245,.18);border-radius:8px;padding:4px 10px;font-size:12px;font-family:var(--numf);letter-spacing:.2px}
+.stat-chip{background:var(--tint);color:var(--blue-deep);border:none;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600}
 /* 枚举配置 */
 .enum-group{margin-bottom:15px}
 .enum-group:last-child{margin-bottom:0}
 .enum-title{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:8px}
 .enum-list{display:flex;flex-wrap:wrap;gap:6px}
-.enum-tag{background:#fff;border:1px solid var(--border);border-radius:9px;
-  padding:4px 6px 4px 11px;font-size:13px;display:inline-flex;align-items:center;gap:2px;
-  box-shadow:0 1px 2px rgba(24,27,40,.04)}
+.enum-tag{background:#fff;border:1px solid rgba(27,28,31,.08);border-radius:999px;
+  padding:5px 7px 5px 12px;font-size:13px;display:inline-flex;align-items:center;gap:2px;box-shadow:0 2px 6px rgba(38,76,130,.05)}
 .enum-tag i{cursor:pointer;font-style:normal;opacity:.5;padding:2px 3px;font-size:12px;transition:.15s}
 .enum-tag i:hover{opacity:1}
 .enum-tag i:last-child:hover{color:var(--red)}
 .check-line{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:12px;cursor:pointer}
-.check-line input{width:16px;height:16px;accent-color:var(--primary)}
+.check-line input{width:16px;height:16px;accent-color:var(--blue)}
 .hint-card p{font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:6px}
 .hint-card p b{color:var(--text)}
 /* 底部导航 */
 #tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;display:flex;
-  background:rgba(255,255,255,.86);backdrop-filter:blur(22px) saturate(1.7);-webkit-backdrop-filter:blur(22px) saturate(1.7);
-  border-top:1px solid var(--border);padding:7px 0 calc(7px + env(safe-area-inset-bottom));z-index:30;
-  box-shadow:0 -10px 30px rgba(24,27,40,.08)}
+  background:rgba(255,255,255,.86);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);
+  border-top:1px solid rgba(27,28,31,.06);padding:7px 0 calc(7px + env(safe-area-inset-bottom));z-index:30;
+  box-shadow:0 -8px 30px rgba(38,76,130,.08)}
 #tabbar button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;
-  font-size:11px;font-weight:500;color:var(--faint);cursor:pointer;padding:4px 0;transition:color .2s}
+  font-size:11px;font-weight:600;color:var(--faint);cursor:pointer;padding:4px 0;transition:color .2s}
 #tabbar button svg{width:22px;height:22px;transition:transform .22s cubic-bezier(.34,1.5,.5,1)}
-#tabbar button.active{color:#4c53d4}
+#tabbar button.active{color:var(--blue-deep)}
 #tabbar button.active svg{transform:translateY(-1.5px)}
-#tabbar button::after{content:'';display:block;width:0;height:2.5px;border-radius:2px;margin-top:1px;
-  background:linear-gradient(90deg,#5a62f5,#7c5cf0);transition:width .22s ease}
-#tabbar button.active::after{width:18px}
-/* 弹窗 */
-#modal-root .modal-mask{position:fixed;inset:0;background:rgba(24,27,40,.32);z-index:50;display:flex;align-items:flex-end;justify-content:center;
-  animation:fadeIn .2s;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
-#modal-root .modal{background:#fff;border:1px solid var(--border-2);border-bottom:none;
+/* 弹窗（iOS 卡片风） */
+#modal-root .modal-mask{position:fixed;inset:0;background:rgba(35,49,75,.42);z-index:50;display:flex;align-items:flex-end;justify-content:center;
+  animation:fadeIn .2s}
+#modal-root .modal{background:#fff;border:none;border-bottom:none;
   width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:20px 16px calc(22px + env(safe-area-inset-bottom));
   max-height:88dvh;overflow-y:auto;animation:sheetUp .34s cubic-bezier(.32,.72,.28,1);
-  box-shadow:0 -24px 64px rgba(24,27,40,.22)}
-#modal-root .modal::before{content:'';display:block;width:38px;height:4px;border-radius:2px;background:rgba(24,27,40,.13);margin:-8px auto 16px}
+  box-shadow:0 -16px 44px rgba(38,76,130,.18)}
+#modal-root .modal::before{content:'';display:block;width:38px;height:4.5px;border-radius:3px;background:rgba(27,28,31,.14);margin:-8px auto 16px}
 @media(min-width:560px){#modal-root .modal-mask{align-items:center;padding:24px}
-  #modal-root .modal{border-radius:20px;border-bottom:1px solid var(--border-2);max-height:82vh}
+  #modal-root .modal{border-radius:20px;max-height:82vh}
   #modal-root .modal::before{display:none}}
 .modal h3{font-size:17px;font-weight:700;margin-bottom:16px;display:flex;align-items:center}
-.modal h3::before{content:'';width:3px;height:14px;border-radius:2px;margin-right:9px;flex:none;
-  background:linear-gradient(180deg,#7c5cf0,#5a62f5)}
+.modal h3::before{content:'';width:5px;height:16px;border-radius:3px;margin-right:9px;flex:none;background:var(--blue)}
 .modal-btns{display:flex;gap:10px;margin-top:18px}
 .modal-btns .btn{flex:1}
 .modal-msg{font-size:15px;line-height:1.75;padding:4px 0}
@@ -270,15 +279,15 @@ body::after{content:'';position:fixed;inset:0;z-index:2000;pointer-events:none;o
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes sheetUp{from{transform:translateY(44px);opacity:.5}to{transform:none;opacity:1}}
 /* 大图查看 */
-#lightbox{position:fixed;inset:0;background:rgba(16,18,26,.92);z-index:100;display:flex;align-items:center;justify-content:center;cursor:zoom-out;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-#lightbox img{max-width:96vw;max-height:90dvh;animation:zoomIn .18s ease;border-radius:8px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+#lightbox{position:fixed;inset:0;background:rgba(18,25,38,.94);z-index:100;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox img{max-width:96vw;max-height:90dvh;animation:zoomIn .18s ease;border-radius:14px;
+  box-shadow:0 24px 80px rgba(0,0,0,.5)}
 @keyframes zoomIn{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
-/* Toast（浅色界面用墨色胶囊，对比更利落） */
+/* Toast（iOS 深色胶囊） */
 #toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%) translateY(10px);
-  background:rgba(24,27,40,.92);border:1px solid rgba(255,255,255,.1);color:#fff;
-  padding:10px 20px;border-radius:24px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:.25s cubic-bezier(.3,.9,.4,1);z-index:200;max-width:80vw;
-  box-shadow:0 10px 34px rgba(24,27,40,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  background:rgba(29,32,38,.94);color:#fff;
+  padding:11px 20px;border-radius:999px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:.25s cubic-bezier(.3,.9,.4,1);z-index:200;max-width:80vw;
+  box-shadow:0 10px 30px rgba(29,32,38,.3)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -394,10 +403,30 @@ async function loadEnums(){
   else{ENUMS=JSON.parse(JSON.stringify(DEFAULT_ENUMS));await dbPut('settings',{key:'enums',value:ENUMS})}
 }
 async function saveEnums(){await dbPut('settings',{key:'enums',value:ENUMS})}
-function enumOptions(list,selected,placeholder){
-  let h='<option value="">'+esc(placeholder)+'</option>';
-  (list||[]).forEach(v=>{h+='<option value="'+esc(v)+'"'+(v===selected?' selected':'')+'>'+esc(v)+'</option>'});
-  return h;
+/* 表单内直接新增枚举：点「＋ 新增选项…」弹窗输入，保存后自动选中（写入隐藏 input 与触发器标签） */
+let ENUM_INLINE=null;
+function enumAddBegin(id,key){
+  const g=ENUM_GROUPS.find(x=>x.key===key);
+  ENUM_INLINE={id:id,key:key};
+  openModal(
+    '<h3>新增'+g.label+'</h3>'+
+    '<div class="field"><label>选项名称</label><input id="e-newvalue" type="text" placeholder="输入新选项，保存后自动选择"></div>'+
+    '<div class="modal-btns"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn primary" onclick="enumInlineSave()">保存并选择</button></div>'
+  );
+  setTimeout(()=>{const el=$('#e-newvalue');if(el)el.focus()},80);
+}
+async function enumInlineSave(){
+  const c=ENUM_INLINE;if(!c)return;
+  const v=$('#e-newvalue').value.trim();
+  if(!v)return toast('请填写选项名称');
+  const exists=ENUMS[c.key].indexOf(v)>=0;
+  if(!exists){ENUMS[c.key].push(v);await saveEnums()}
+  closeModal();ENUM_INLINE=null;
+  const inp=document.getElementById(c.id);
+  if(inp)inp.value=v;
+  const btn=document.getElementById(c.id+'-btn');
+  if(btn){const lab=btn.querySelector('.dd-val');if(lab){lab.textContent=v;lab.className='dd-val on'}}
+  toast(exists?'该选项已存在，已为你选择':'已新增「'+v+'」并选择');
 }
 
 /* ================= 计算逻辑 ================= */
@@ -418,7 +447,7 @@ async function route(){
   const h=(location.hash||'#/purchases').replace(/^#/,'');
   const parts=h.replace(/^\//,'').split('/');
   const root=parts[0]||'purchases';
-  closeModal();
+  closeModal();ddClose();
   const topPages=['purchases','trips','settings'];
   $('#tabbar').classList.toggle('hidden',topPages.indexOf(root)<0);
   setTab(root);
@@ -445,16 +474,83 @@ async function renderPurchases(){
       '<div id="p-summary"></div>'+
       '<div class="filters">'+
         '<input id="pf-kw" type="search" placeholder="搜索购买内容 / 余量明细" value="'+esc(PF.kw)+'">'+
-        '<select id="pf-method"><option value="">全部方式</option>'+ENUMS.methods.map(v=>'<option value="'+esc(v)+'"'+(v===PF.method?' selected':'')+'>'+esc(v)+'</option>').join('')+'</select>'+
-        '<select id="pf-arrival"><option value="">全部到货</option>'+ENUMS.arrivals.map(v=>'<option value="'+esc(v)+'"'+(v===PF.arrival?' selected':'')+'>'+esc(v)+'</option>').join('')+'</select>'+
+        '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-method" onclick="ddToggle(\'method\',this)"><span class="dd-val '+(PF.method?'on':'ph')+'">'+(PF.method?esc(PF.method):'全部购买方式')+'</span><svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>'+
+        '<div class="dd"><button type="button" class="dd-btn" id="dd-btn-arrival" onclick="ddToggle(\'arrival\',this)"><span class="dd-val '+(PF.arrival?'on':'ph')+'">'+(PF.arrival?esc(PF.arrival):'全部到货情况')+'</span><svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>'+
       '</div>'+
       '<div id="p-list"></div>'+
     '</div>';
   let t=null;
   $('#pf-kw').addEventListener('input',e=>{clearTimeout(t);t=setTimeout(()=>{PF.kw=e.target.value;pfApply()},350)});
-  $('#pf-method').addEventListener('change',e=>{PF.method=e.target.value;pfApply()});
-  $('#pf-arrival').addEventListener('change',e=>{PF.arrival=e.target.value;pfApply()});
   await pfApply();
+}
+/* 自定义下拉（筛选+表单）：ddOpen/ddPick/ddClose 通用核心 */
+let DDCONF=null;
+const DDCHEV='<svg class="dd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+const DDCK='<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+function ddClose(){
+  const p=document.getElementById('dd-pop');if(p)p.remove();
+  if(DDCONF&&DDCONF.btn)DDCONF.btn.classList.remove('open');
+  DDCONF=null;document.removeEventListener('click',ddOutside);
+}
+function ddOutside(e){
+  if(e.target.closest('#dd-pop')||e.target.closest('.dd-btn'))return;
+  ddClose();
+}
+function ddOpen(btn,items,onPick){
+  ddClose();
+  btn.classList.add('open');
+  const pop=document.createElement('div');pop.id='dd-pop';
+  pop.innerHTML=items.map(it=>'<div class="dd-item'+(it.on?' on':'')+(it.add?' add':'')+'" data-v="'+esc(it.v)+'" onclick="ddPick(this)">'+esc(it.label)+DDCK+'</div>').join('');
+  document.body.appendChild(pop);
+  const r=btn.getBoundingClientRect();
+  pop.style.width=r.width+'px';
+  pop.style.left=Math.max(8,Math.min(r.left,innerWidth-pop.offsetWidth-8))+'px';
+  let top=r.bottom+6;
+  if(top+pop.offsetHeight>innerHeight-12)top=r.top-6-pop.offsetHeight;
+  pop.style.top=Math.max(8,top)+'px';
+  DDCONF={btn:btn,onPick:onPick};
+  setTimeout(()=>document.addEventListener('click',ddOutside),0);
+}
+function ddPick(el){
+  if(!DDCONF)return;
+  const c=DDCONF,v=el.dataset.v;
+  ddClose();
+  c.onPick(v);
+}
+/* 筛选下拉 */
+const DDC={
+  method:()=>({ph:'全部购买方式',list:ENUMS.methods,val:PF.method,set:v=>PF.method=v}),
+  arrival:()=>({ph:'全部到货情况',list:ENUMS.arrivals,val:PF.arrival,set:v=>PF.arrival=v})
+};
+function ddToggle(key,btn){
+  if(DDCONF&&DDCONF.btn===btn){ddClose();return}
+  const c=DDC[key]();
+  const items=[{v:'',label:c.ph,on:c.val===''}].concat(c.list.map(x=>({v:x,label:x,on:x===c.val})));
+  ddOpen(btn,items,v=>{
+    c.set(v);pfApply();
+    const lab=btn.querySelector('.dd-val');
+    if(lab){lab.textContent=v||c.ph;lab.className='dd-val '+(v?'on':'ph')}
+  });
+}
+/* 表单下拉（替代原生 select；隐藏 input 保留原 id，表单读取逻辑不变） */
+function ddField(id,key,selected,ph){
+  return '<div class="dd dd-form">'+
+    '<button type="button" class="dd-btn" id="'+id+'-btn" data-ph="'+esc(ph)+'" onclick="ddFormToggle(\''+id+'\',\''+key+'\',this)">'+
+    '<span class="dd-val '+(selected?'on':'ph')+'">'+(selected?esc(selected):esc(ph))+'</span>'+DDCHEV+'</button>'+
+    '<input type="hidden" id="'+id+'" value="'+esc(selected||'')+'"></div>';
+}
+function ddFormToggle(id,key,btn){
+  if(DDCONF&&DDCONF.btn===btn){ddClose();return}
+  const cur=document.getElementById(id).value,ph=btn.dataset.ph;
+  const items=[{v:'',label:ph,on:cur===''}]
+    .concat((ENUMS[key]||[]).map(x=>({v:x,label:x,on:x===cur})))
+    .concat([{v:'__add__',label:'＋ 新增选项…',add:true}]);
+  ddOpen(btn,items,v=>{
+    if(v==='__add__'){enumAddBegin(id,key);return}
+    document.getElementById(id).value=v;
+    const lab=btn.querySelector('.dd-val');
+    if(lab){lab.textContent=v||ph;lab.className='dd-val '+(v?'on':'ph')}
+  });
 }
 async function pfApply(){
   const all=(await dbAll('purchases')).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -475,9 +571,15 @@ async function pfApply(){
     '</div>';
   $('#p-list').innerHTML=list.length?list.map(p=>{
     const cost=costOf(p),rem=remainingOf(p),ss=salesSum(p),rec=recoveredOf(p);
-    return '<div class="card" onclick="nav(\'#/purchase/'+p.id+'\')">'+
-      '<div class="row1"><span class="title">'+esc(p.content)+'</span><span class="badge '+(rem>0.005?'red':'green')+'">'+(rem>0.005?'未回本':'已回本')+'</span></div>'+
-      '<div class="muted small" style="margin-top:4px">'+esc(p.buyDate||'未填日期')+' · '+esc(p.method)+' · '+esc(p.arrival)+(p.groupDetail?' · '+esc(p.groupDetail):'')+'</div>'+
+    const badge=p.soldOut?
+      (rem>0.005?'<span class="badge red">已卖完 · 亏损</span>':(rem<-0.005?'<span class="badge green">已卖完 · 盈利</span>':'<span class="badge blue">已卖完 · 已回本</span>')):
+      '<span class="badge '+(rem>0.005?'red':'green')+'">'+(rem>0.005?'未回本':'已回本')+'</span>';
+    return '<div class="card'+(p.soldOut?' soldout':'')+'" onclick="nav(\'#/purchase/'+p.id+'\')">'+
+      '<div class="row1"><span class="title">'+esc(p.content)+'</span>'+badge+'</div>'+
+      '<div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
+        '<span class="badge blue">'+esc(p.arrival)+'</span>'+
+        '<span class="muted small">'+esc(p.buyDate||'未填日期')+' · '+esc(p.method)+(p.groupDetail?' · '+esc(p.groupDetail):'')+'</span>'+
+      '</div>'+
       '<div class="nums"><span>成本 <b>¥'+fmt(cost)+'</b></span><span>回收 <b>¥'+fmt(rec)+'</b></span><span class="'+(rem>0.005?'red':'green')+'">剩余 <b>¥'+fmt(rem)+'</b></span><span>已售 <b>'+ss.count+'</b>笔</span></div>'+
     '</div>';
   }).join(''):'<div class="empty">'+EMPTY_ICON+'暂无购买记录<br>点击右上角「新建」开始记账</div>';
@@ -494,17 +596,15 @@ async function renderPurchaseForm(id){
     (rec?'<button class="btn sm danger" onclick="pfDelete()">删除</button>':'')+'</div>'+
     '<div class="page no-tab">'+
       '<div class="card">'+
-        '<div class="field"><label>购买内容 *</label><input id="f-content" type="text" value="'+esc(rec?rec.content:'')+'" placeholder="买了什么"></div>'+
+        '<div class="field"><label>购买内容 *</label><textarea id="f-content" rows="3" placeholder="买了什么">'+esc(rec?rec.content:'')+'</textarea></div>'+
         '<div class="calc">'+
-          '<div class="field"><label>购买方式 *</label><select id="f-method">'+enumOptions(ENUMS.methods,rec?rec.method:null,'请选择')+'</select></div>'+
-          '<div class="field"><label>到货情况 *</label><select id="f-arrival">'+enumOptions(ENUMS.arrivals,rec?rec.arrival:null,'请选择')+'</select></div>'+
+          '<div class="field"><label>购买方式 *</label>'+ddField('f-method','methods',rec?rec.method:null,'请选择')+'</div>'+
+          '<div class="field"><label>到货情况 *</label>'+ddField('f-arrival','arrivals',rec?rec.arrival:null,'请选择')+'</div>'+
         '</div>'+
-        '<div class="calc">'+
-          '<div class="field"><label>出荷日期</label><input id="f-shipdate" type="text" value="'+esc(rec?rec.shipDate:'')+'" placeholder="如 2026/3/15"></div>'+
-          '<div class="field"><label>购买日期</label><input id="f-buydate" type="date" value="'+esc(rec?rec.buyDate||'':todayStr())+'"></div>'+
-        '</div>'+
-        '<div class="field"><label>跟团明细</label><select id="f-group">'+enumOptions(ENUMS.groups,rec?rec.groupDetail:null,'不选择')+'</select></div>'+
-        '<div class="field"><label>余量明细 *</label><input id="f-remdetail" type="text" value="'+esc(rec?rec.remainingDetail:'')+'" placeholder="还剩多少没卖出"></div>'+
+        '<div class="field"><label>出荷日期</label><input id="f-shipdate" type="text" value="'+esc(rec?rec.shipDate:'')+'" placeholder="如 2026/3/15"></div>'+
+        '<div class="field"><label>购买日期</label><input id="f-buydate" type="date" value="'+esc(rec?rec.buyDate||'':todayStr())+'"></div>'+
+        '<div class="field"><label>跟团明细</label>'+ddField('f-group','groups',rec?rec.groupDetail:null,'不选择')+'</div>'+
+        '<div class="field"><label>余量明细 *</label><textarea id="f-remdetail" rows="3" placeholder="还剩多少没卖出">'+esc(rec?rec.remainingDetail:'')+'</textarea></div>'+
       '</div>'+
       '<div class="card">'+
         '<div class="card-title">金额</div>'+
@@ -591,9 +691,23 @@ async function renderPurchaseDetail(id){
   if(!p)return nav('#/purchases');
   const cost=costOf(p),rate=rateOf(p),ss=salesSum(p),rem=remainingOf(p);
   const statusTxt=rem>0.005?('未回收 ¥'+fmt(rem)):(rem<-0.005?('已回本，盈余 ¥'+fmt(-rem)):'已全部收回');
+  const so=!!p.soldOut;
+  let bannerCls,bannerLabel,bannerVal;
+  if(so){
+    if(rem>0.005){bannerCls='';bannerLabel='已卖完 · 结算亏损';bannerVal=fmt(rem)}
+    else if(rem<-0.005){bannerCls=' ok';bannerLabel='已卖完 · 盈利';bannerVal=fmt(-rem)}
+    else{bannerCls=' ok';bannerLabel='已卖完 · 刚好回本';bannerVal='0.00'}
+  }else{
+    bannerCls=rem>0.005?'':' ok';
+    bannerLabel='剩余成本 · '+statusTxt;
+    bannerVal=fmt(rem);
+  }
+  const soD=p.soldOutAt?new Date(p.soldOutAt):null;
   const kv=[
+    ['购买内容',esc(p.content)],
     ['购买方式',esc(p.method)],
     ['到货情况',esc(p.arrival)],
+    ['卖完状态',so?('已卖完'+(soD?(' · '+soD.getFullYear()+'-'+pad(soD.getMonth()+1)+'-'+pad(soD.getDate())):'')):'未卖完'],
     ['出荷日期',esc(p.shipDate)||'—'],
     ['购买日期',esc(p.buyDate)||'—'],
     ['日元金额',(p.jpyAmount!=null?('¥'+p.jpyAmount):'—')],
@@ -608,11 +722,13 @@ async function renderPurchaseDetail(id){
   $('#app').innerHTML=
     '<div class="subheader"><button class="iconbtn" onclick="nav(\'#/purchases\')">'+BACK_SVG+'</button><h1>'+esc(p.content)+'</h1><button class="btn sm ghost" onclick="nav(\'#/purchase-form/'+p.id+'\')">编辑</button></div>'+
     '<div class="page no-tab">'+
-      '<div class="remaining-banner'+(rem>0.005?'':' ok')+'">'+
-        '<div class="l">剩余成本 · '+statusTxt+'</div>'+
-        '<div class="v"><span class="cur">¥</span> '+fmt(rem)+'</div>'+
+      '<div class="remaining-banner'+bannerCls+'">'+
+        (so?'<div class="stamp-big">售罄</div>':'')+
+        '<div class="l">'+bannerLabel+'</div>'+
+        '<div class="v"><span class="cur">¥</span> '+bannerVal+'</div>'+
         '<div class="d">= 成本'+fmt(cost)+' − 售卖金额Σ'+fmt(ss.amount)+' + 售卖邮费Σ'+fmt(ss.shipping)+' + 闲鱼手续费Σ'+fmt(ss.fee)+' + 包装费Σ'+fmt(ss.packaging)+'</div>'+
       '</div>'+
+      '<button class="btn '+(so?'ghost':'primary')+' block" onclick="toggleSoldOut(\''+p.id+'\')">'+(so?'↩ 取消卖完标记':'✓ 标记为已卖完')+'</button>'+
       '<div class="card"><dl class="kv">'+kv.map(x=>'<dt>'+x[0]+'</dt><dd>'+x[1]+'</dd>').join('')+'</dl></div>'+
       ((p.images&&p.images.length)?'<div class="card"><div class="card-title">购买截图</div><div class="gallery">'+p.images.map(src=>'<div class="thumb"><img src="'+src+'" onclick="showImgBy(this)"></div>').join('')+'</div></div>':'')+
       '<div class="card">'+
@@ -621,34 +737,74 @@ async function renderPurchaseDetail(id){
           '<div class="sale-item">'+
             '<div class="row1"><b>'+esc(s.detail)+'</b><span style="flex:none;font-weight:600">¥'+fmt(s.amount)+'</span></div>'+
             '<div class="meta">邮费 ¥'+fmt(s.shipping)+' · 手续费 '+(s.fee!=null?('¥'+fmt(s.fee)):'—')+' · 包装费 '+(s.packaging!=null?('¥'+fmt(s.packaging)):'—')+'</div>'+
+            ((s.images&&s.images.length)?'<div class="mini-thumbs">'+s.images.map(src=>'<img src="'+src+'" onclick="showImgBy(this)">').join('')+'</div>':'')+
             '<div class="item-ops"><button class="btn sm ghost" onclick="openSaleModalById(\''+p.id+'\',\''+s.id+'\')">编辑</button><button class="btn sm danger-ghost" onclick="saleDelete(\''+p.id+'\',\''+s.id+'\')">删除</button></div>'+
           '</div>').join(''):'<div class="hint" style="padding:8px 0">还没有售卖记录</div>')+
       '</div>'+
     '</div>';
 }
+/* 卖完标记：卖完时按「成本 − 回收」自动结算 亏损 / 回本 / 盈利 */
+async function toggleSoldOut(id){
+  const p=await dbGet('purchases',id);
+  if(!p)return nav('#/purchases');
+  if(p.soldOut){
+    p.soldOut=false;delete p.soldOutAt;
+    p.updatedAt=Date.now();
+    await dbPut('purchases',p);
+    toast('已取消卖完标记');
+  }else{
+    const rem=remainingOf(p);
+    const st=rem>0.005?('亏损 ¥'+fmt(rem)):(rem<-0.005?('盈利 ¥'+fmt(-rem)):'刚好回本');
+    if(!await confirmDlg('标记为<b>已卖完</b>？<br>将按当前数据记录结算结果：<b style="color:'+(rem>0.005?'var(--red)':'var(--green)')+'">'+st+'</b>',{okText:'标记卖完'}))return;
+    p.soldOut=true;p.soldOutAt=Date.now();
+    p.updatedAt=Date.now();
+    await dbPut('purchases',p);
+    toast('已标记卖完 · '+st);
+  }
+  renderPurchaseDetail(id);
+}
 
 /* ================= 售卖记录（弹窗） ================= */
+let SALE_IMGS=[];
 async function openSaleModalById(pid,sid){
   const p=await dbGet('purchases',pid);
   if(!p)return nav('#/purchases');
   const sale=sid?(p.sales||[]).find(s=>s.id===sid):null;
   window.__sp=pid;window.__saleId=sid||null;
+  SALE_IMGS=sale?(sale.images||[]).slice():[];
   openModal(
     '<h3>'+(sale?'编辑售卖记录':'添加售卖记录')+'</h3>'+
+    '<div class="field"><label>售卖明细 *</label><input id="s-detail" type="text" value="'+esc(sale?sale.detail:'')+'" placeholder="卖了什么"></div>'+
     '<div class="field"><label>售卖金额（元）*</label><input id="s-amount" type="number" inputmode="decimal" step="any" min="0" value="'+(sale&&sale.amount!=null?sale.amount:'')+'"></div>'+
     '<div class="calc">'+
       '<div class="field"><label>售卖邮费（元）*</label><input id="s-shipping" type="number" inputmode="decimal" step="any" min="0" value="'+(sale&&sale.shipping!=null?sale.shipping:'')+'"></div>'+
       '<div class="field"><label>闲鱼手续费（元）</label><input id="s-fee" type="number" inputmode="decimal" step="any" min="0" value="'+(sale&&sale.fee!=null?sale.fee:'')+'" placeholder="默认=售卖金额×6‰"></div>'+
     '</div>'+
     '<div class="field"><label>包装费（元）</label><input id="s-packaging" type="number" inputmode="decimal" step="any" min="0" value="'+(sale&&sale.packaging!=null?sale.packaging:'')+'"></div>'+
-    '<div class="field"><label>售卖明细 *</label><input id="s-detail" type="text" value="'+esc(sale?sale.detail:'')+'" placeholder="卖了什么"></div>'+
+    '<div class="field"><label>售卖截图</label>'+
+      '<div class="thumbs" id="s-img-thumbs"></div>'+
+      '<button class="addimg" onclick="$(\'#s-img\').click()">＋<br>添加图片</button>'+
+      '<input type="file" id="s-img" accept="image/*" multiple style="display:none" onchange="saleAddImages(this)">'+
+    '</div>'+
     '<div class="modal-btns"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn primary" onclick="saleSave()">保存</button></div>'
   );
+  saleRenderThumbs();
   const amt=$('#s-amount'),feeEl=$('#s-fee');
   let feeTouched=!!(sale&&sale.fee!=null);
   amt.addEventListener('input',()=>{if(!feeTouched)feeEl.value=feeDefault(amt.value)});
   feeEl.addEventListener('input',()=>{feeTouched=true});
 }
+async function saleAddImages(input){
+  const files=Array.prototype.slice.call(input.files);
+  for(const f of files){try{SALE_IMGS.push(await compressImage(f))}catch(e){}}
+  input.value='';saleRenderThumbs();
+}
+function saleRenderThumbs(){
+  const el=$('#s-img-thumbs');if(!el)return;
+  el.innerHTML=SALE_IMGS.map((src,i)=>
+    '<div class="thumb"><img src="'+src+'" onclick="showImgBy(this)"><button onclick="saleDelImg('+i+')">×</button></div>').join('');
+}
+function saleDelImg(i){SALE_IMGS.splice(i,1);saleRenderThumbs()}
 async function saleSave(){
   const pid=window.__sp,sid=window.__saleId;
   const amount=toNumOrNull($('#s-amount').value);
@@ -664,9 +820,9 @@ async function saleSave(){
   p.sales=p.sales||[];
   if(sid){
     const old=p.sales.find(s=>s.id===sid);
-    p.sales=p.sales.map(s=>s.id===sid?Object.assign({},s,{amount:amount,shipping:shipping,fee:fee,packaging:packaging,detail:detail}):s);
+    p.sales=p.sales.map(s=>s.id===sid?Object.assign({},s,{amount:amount,shipping:shipping,fee:fee,packaging:packaging,detail:detail,images:SALE_IMGS.slice()}):s);
   }else{
-    p.sales.push({id:uid(),createdAt:Date.now(),amount:amount,shipping:shipping,fee:fee,packaging:packaging,detail:detail});
+    p.sales.push({id:uid(),createdAt:Date.now(),amount:amount,shipping:shipping,fee:fee,packaging:packaging,detail:detail,images:SALE_IMGS.slice()});
   }
   p.updatedAt=Date.now();
   await dbPut('purchases',p);
@@ -791,8 +947,8 @@ async function renderExpenseForm(tripId,expId){
         '<div class="field"><label>账单日期（默认当前时间，可修改）</label><input id="e-billtime" type="datetime-local" value="'+esc(exp?exp.billTime||'':nowLocal())+'"></div>'+
         '<div class="field"><label>费用金额（元）*</label><input id="e-amount" type="number" inputmode="decimal" step="any" min="0" value="'+(exp&&exp.amount!=null?exp.amount:'')+'"></div>'+
         '<div class="calc">'+
-          '<div class="field"><label>费用种类 *</label><select id="e-category">'+enumOptions(ENUMS.expenseTypes,exp?exp.category:null,'请选择')+'</select></div>'+
-          '<div class="field"><label>支付人 *</label><select id="e-payer">'+enumOptions(ENUMS.payers,exp?exp.payer:null,'请选择')+'</select></div>'+
+          '<div class="field"><label>费用种类 *</label>'+ddField('e-category','expenseTypes',exp?exp.category:null,'请选择')+'</div>'+
+          '<div class="field"><label>支付人 *</label>'+ddField('e-payer','payers',exp?exp.payer:null,'请选择')+'</div>'+
         '</div>'+
         '<div class="field"><label>费用描述 *</label><input id="e-desc" type="text" value="'+esc(exp?exp.desc:'')+'" placeholder="如：机场大巴"></div>'+
       '</div>'+
@@ -928,7 +1084,12 @@ async function enumDelete(key,idx){
 async function buildBackup(withImages){
   const purchases=await dbAll('purchases');
   const trips=await dbAll('trips');
-  const cp=purchases.map(p=>withImages?p:Object.assign({},p,{images:[]}));
+  const cp=purchases.map(p=>{
+    if(withImages)return p;
+    const q=Object.assign({},p,{images:[]});
+    q.sales=(p.sales||[]).map(s=>Object.assign({},s,{images:[]}));
+    return q;
+  });
   const ct=trips.map(t=>Object.assign({},t,{expenses:(t.expenses||[]).map(e=>Object.assign({},e,{images:withImages?(e.images||[]):[]}))}));
   return{app:'ledger',version:1,exportedAt:new Date().toISOString(),purchases:cp,trips:ct,enums:ENUMS};
 }
@@ -950,7 +1111,7 @@ async function importJSON(file){
   const pCount=data.purchases.length,tCount=data.trips.length;
   const ok=await confirmDlg('备份包含 <b>'+pCount+'</b> 条购买记录、<b>'+tCount+'</b> 个旅程。<br>导入将<b style="color:var(--red)">替换当前全部数据</b>，确定继续？',{danger:true,okText:'替换导入'});
   if(!ok)return;
-  data.purchases.forEach(p=>{p.sales=Array.isArray(p.sales)?p.sales:[];p.images=Array.isArray(p.images)?p.images:[]});
+  data.purchases.forEach(p=>{p.sales=Array.isArray(p.sales)?p.sales:[];p.images=Array.isArray(p.images)?p.images:[];p.sales.forEach(s=>{s.images=Array.isArray(s.images)?s.images:[]})});
   data.trips.forEach(t=>{t.expenses=Array.isArray(t.expenses)?t.expenses:[];t.expenses.forEach(e=>{e.images=Array.isArray(e.images)?e.images:[]})});
   await dbClear('purchases');
   await dbClear('trips');
