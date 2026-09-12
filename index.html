@@ -240,11 +240,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   color:var(--muted);cursor:pointer;box-shadow:0 2px 8px rgba(38,76,130,.05);transition:.15s;white-space:nowrap}
 .tab:hover{color:var(--blue-deep)}
 .tab.on{background:#1e2126;color:#fff;font-weight:600;box-shadow:0 5px 14px rgba(30,33,38,.22)}
-/* 设置页分组配置行 */
-.tab-cfg{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.tab-cfg:last-child{margin-bottom:0}
-.tab-cfg>span{flex:none;font-size:13.5px;color:var(--muted);width:52px}
-.tab-cfg .dd{flex:1}
+/* 设置页分组配置：组名输入行 + 到货多选下拉行 */
+.tab-cfg{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--border)}
+.tab-cfg:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.tc-head{display:flex;align-items:center;gap:8px}
+.tc-head>span{flex:none;font-size:12.5px;color:var(--faint)}
+.tab-name{flex:1;min-width:0;padding:8px 12px;border:1.5px solid transparent;border-radius:10px;background:#fff;
+  font-size:13.5px;font-family:inherit;color:var(--text);outline:none;box-shadow:0 2px 8px rgba(38,76,130,.05);transition:.15s}
+.tab-name:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,158,255,.14)}
 /* 色板 */
 .palette{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 6px}
 .pal{width:38px;height:38px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(27,28,31,.12);cursor:pointer;transition:.15s}
@@ -461,7 +464,7 @@ function mixWhite(hex,ratio){const h=hex.replace('#','');const r=parseInt(h.subs
 /* 列表/浮层用样式：未配置颜色返回空串（走默认 badge blue） */
 function arrivalBadgeStyle(name){const c=arrivalColor(name);return c?(' style="background:'+mixWhite(c,.13)+';color:'+c+'"'):''}
 function arrivalDotStyle(name){const c=arrivalColor(name);return c?('background:'+c):('background:var(--tint)')}
-const COLOR_PALETTE=['#2563eb','#0e7490','#15803d','#b45309','#b91c1c','#6d28d9','#be185d','#374151'];
+const COLOR_PALETTE=['#2563eb','#4338ca','#6d28d9','#be185d','#b91c1c','#ea580c','#b45309','#15803d','#4d7c0f','#0d9488','#0e7490','#374151'];
 function arrivalColorBegin(name){
   ddClose();
   window.__colorCtx=name;
@@ -558,33 +561,78 @@ async function route(){
 window.addEventListener('hashchange',route);
 
 /* ================= 购买列表 ================= */
-/* 分组配置：购买页 Tab（全部 + 4 个分组，每组绑定一个到货情况枚举值；空=不展示） */
+/* 分组配置：购买页 Tab（全部 + 4 个分组，每组 = 自定义组名 + 绑定多个到货情况值；不绑任何值=不展示）
+   结构 {id,name,arrivals[]}；兼容旧格式（纯字符串数组）自动迁移 */
 const PF_TAB_MAX=4;
+function normTab(x){
+  if(typeof x==='string')return x?{id:uid(),name:x,arrivals:[x]}:{id:uid(),name:'',arrivals:[]};
+  if(x&&typeof x==='object')return{id:(typeof x.id==='string'&&x.id)?x.id:uid(),name:(x.name||'').toString(),arrivals:Array.isArray(x.arrivals)?x.arrivals.filter(Boolean):[]};
+  return{id:uid(),name:'',arrivals:[]};
+}
 function getPfTabs(){
   try{const t=JSON.parse(localStorage.getItem('ledger_pf_tabs'));
-    if(Array.isArray(t))return t.slice(0,PF_TAB_MAX).map(x=>x||'');
+    if(Array.isArray(t)){
+      const out=t.slice(0,PF_TAB_MAX).map(normTab);
+      while(out.length<PF_TAB_MAX)out.push(normTab(''));
+      setPfTabs(out);
+      return out;
+    }
   }catch(e){}
-  return (typeof ENUMS==='object'&&ENUMS&&Array.isArray(ENUMS.arrivals)?ENUMS.arrivals.slice(0,PF_TAB_MAX):Array(PF_TAB_MAX).fill(''));
+  const arr=(typeof ENUMS==='object'&&ENUMS&&Array.isArray(ENUMS.arrivals)?ENUMS.arrivals:[]);
+  const out=Array.from({length:PF_TAB_MAX},(_,i)=>arr[i]?{id:uid(),name:arr[i],arrivals:[arr[i]]}:normTab(''));
+  return out;
 }
-function setPfTabs(t){try{localStorage.setItem('ledger_pf_tabs',JSON.stringify(t.slice(0,PF_TAB_MAX).map(x=>x||'')))}catch(e){}}
-/* 设置页分组配置下拉：绑定到货枚举值；选「不展示」清除该分组 */
-function pfTabCfgField(i,cur){
-  return '<div class="dd"><button type="button" class="dd-btn" id="cfg-tab-'+i+'-btn" onclick="pfTabCfgToggle('+i+',this)">'+
-    '<span class="dd-val '+(cur?'on':'ph')+'">'+(cur?esc(cur):'不展示')+'</span>'+DDCHEV+'</button></div>';
+function setPfTabs(t){try{localStorage.setItem('ledger_pf_tabs',JSON.stringify(t.slice(0,PF_TAB_MAX).map(g=>({id:g.id,name:(g.name||'').trim(),arrivals:(g.arrivals||[]).filter(Boolean)}))))}catch(e){}}
+/* Tab 展示名：组名优先，未填取第一个绑定值 */
+function pfTabLabel(g){return g.name||g.arrivals[0]||''}
+/* 设置页分组配置：组名输入 + 到货多选下拉（chips） */
+function pfTabCfgField(i,g){
+  return '<div class="tab-cfg">'+
+    '<div class="tc-head"><span>分组 '+(i+1)+'</span>'+
+      '<input class="tab-name" type="text" id="cfg-tab-name-'+i+'" value="'+esc(g.name)+'" placeholder="组名（默认取第一个到货值）" oninput="pfTabCfgName('+i+',this.value)"></div>'+
+    pfTabCfgDD(i,g)+
+  '</div>';
+}
+function pfTabCfgDD(i,g){
+  const on=g.arrivals.length>0;
+  return '<div class="dd"><button type="button" class="dd-btn'+(on?' has-chips':'')+'" id="cfg-tab-'+i+'-btn" onclick="pfTabCfgToggle('+i+',this)">'+
+    '<span class="dd-chips">'+(on?pfTabCfgChips(i,g.arrivals):'<span class="dd-val ph">选择到货情况（可多选）</span>')+'</span>'+DDCHEV+'</button></div>';
+}
+function pfTabCfgChips(i,arr){
+  return arr.map(v=>'<span class="chip"><span>'+esc(v)+'</span><i onclick="event.stopPropagation();pfTabCfgRemove('+i+',\''+esc(v)+'\')" title="移除 '+esc(v)+'">×</i></span>').join('');
+}
+/* 局部同步下拉按钮（不整页重渲染，避免丢组名输入焦点） */
+function pfTabCfgSync(i){
+  const g=getPfTabs()[i];if(!g)return;
+  const b=document.getElementById('cfg-tab-'+i+'-btn');if(!b)return;
+  const box=b.querySelector('.dd-chips');
+  if(box)box.innerHTML=g.arrivals.length?pfTabCfgChips(i,g.arrivals):'<span class="dd-val ph">选择到货情况（可多选）</span>';
+  b.classList.toggle('has-chips',g.arrivals.length>0);
+  /* 组名未填时占位提示跟随第一个绑定值 */
+  const ni=document.getElementById('cfg-tab-name-'+i);
+  if(ni)ni.placeholder=g.arrivals[0]?('默认显示「'+g.arrivals[0]+'」'):'组名（默认取第一个到货值）';
+}
+function pfTabCfgName(i,v){
+  const t=getPfTabs();if(!t[i])return;
+  t[i].name=v;
+  setPfTabs(t);
+}
+function pfTabCfgRemove(i,v){
+  const t=getPfTabs(),g=t[i];if(!g)return;
+  const k=g.arrivals.indexOf(v);
+  if(k>=0)g.arrivals.splice(k,1);
+  setPfTabs(t);pfTabCfgSync(i);
 }
 function pfTabCfgToggle(i,btn){
   if(DDCONF&&DDCONF.btn===btn){ddClose();return}
-  const tabs=getPfTabs(),cur=tabs[i]||'';
-  const items=[{v:'',label:'不展示此分组',on:!cur}]
-    .concat((ENUMS.arrivals||[]).map(x=>({v:x,label:x,on:x===cur})));
+  const t=getPfTabs(),g=t[i];if(!g)return;
+  const items=(ENUMS.arrivals||[]).map(x=>({v:x,label:x,on:g.arrivals.indexOf(x)>=0}));
   ddOpen(btn,items,v=>{
-    const t=getPfTabs();t[i]=v||'';
-    setPfTabs(t);
-    if(PF.tab&&PF.tab!=='all'&&t.indexOf(PF.tab)<0)PF.tab='all';
-    pfPersist();
-    renderSettings();
-    toast(v?('分组 '+(i+1)+' 已绑定「'+v+'」'):'分组 '+(i+1)+' 已取消展示');
-  });
+    const tt=getPfTabs(),gg=tt[i];if(!gg)return;
+    const k=gg.arrivals.indexOf(v);
+    if(k>=0)gg.arrivals.splice(k,1);else gg.arrivals.push(v);
+    setPfTabs(tt);pfTabCfgSync(i);
+  },{multi:true});
 }
 /* 筛选/排序条件本地保存：修改或重置前，跨刷新/重开保留；method/tags 为多选数组；tab 为分组页签 */
 let PF=(function(){
@@ -648,9 +696,9 @@ function pfRemoveItem(key,v){
   if(i>=0)PF[key].splice(i,1);
   pfPersist();pfApply();pfSyncFilters();
 }
-/* 分组 Tab：全部 + 已绑定的到货枚举值 */
+/* 分组 Tab：全部 + 已绑定到货值的分组（id 寻址，label=组名或第一个绑定值） */
 function pfTabsInner(){
-  const tabs=[{v:'all',label:'全部'}].concat(getPfTabs().filter(Boolean).map(x=>({v:x,label:x})));
+  const tabs=[{v:'all',label:'全部'}].concat(getPfTabs().filter(g=>g.arrivals.length).map(g=>({v:g.id,label:pfTabLabel(g)})));
   return tabs.map(t=>'<button type="button" class="tab'+(PF.tab===t.v?' on':'')+'" onclick="pfSwitchTab(\''+esc(t.v)+'\')">'+esc(t.label)+'</button>').join('');
 }
 function pfSwitchTab(v){
@@ -661,8 +709,11 @@ function pfSwitchTab(v){
   pfApply();
 }
 async function renderPurchases(){
-  /* 分组绑定失效（枚举被删/配置变更）时回退「全部」 */
-  if(PF.tab!=='all'&&getPfTabs().indexOf(PF.tab)<0)PF.tab='all';
+  /* 分组失效（被清空绑定/配置变更）时回退「全部」 */
+  if(PF.tab!=='all'){
+    const g=getPfTabs().find(t=>t.id===PF.tab);
+    if(!g||!g.arrivals.length)PF.tab='all';
+  }
   $('#app').innerHTML=
     '<div class="page">'+
       '<div class="page-header"><div><div class="kicker">购销明细</div><h1>购买记录</h1></div><button class="btn primary" onclick="nav(\'#/purchase-form\')">＋ 新建</button></div>'+
@@ -823,8 +874,9 @@ function ddFormToggle(id,key,btn){
 }
 async function pfApply(){
   const all=await dbAll('purchases');
+  const group=PF.tab!=='all'?getPfTabs().find(t=>t.id===PF.tab):null;
   const list=all.filter(p=>{
-    if(PF.tab&&PF.tab!=='all'&&p.arrival!==PF.tab)return false;
+    if(group&&group.arrivals.indexOf(p.arrival)<0)return false;
     if(PF.method.length&&PF.method.indexOf(p.method)<0)return false;
     if(PF.tags.length&&PF.tags.indexOf(p.tag||'')<0)return false;
     if(PF.kw){const kw=PF.kw.toLowerCase();
@@ -1347,9 +1399,8 @@ async function renderSettings(){
       '</div>'+
       '<div class="card">'+
         '<div class="card-title">购买页分组</div>'+
-        '<p class="hint">购买记录页顶部的 Tab 按到货情况分组：第一个 Tab 固定为「全部」，其余每个分组绑定一个到货情况值；不绑定的分组不展示。</p>'+
-        getPfTabs().concat(Array(Math.max(0,PF_TAB_MAX-getPfTabs().length)).fill('')).slice(0,PF_TAB_MAX).map((v,i)=>
-          '<div class="tab-cfg"><span>分组 '+(i+1)+'</span>'+pfTabCfgField(i,v)+'</div>').join('')+
+        '<p class="hint">购买记录页顶部第一个 Tab 固定为「全部」，其余按分组展示。每个分组可自定义组名（不填则取第一个到货值），并可绑定多个到货情况值；不绑定任何值的分组不展示。</p>'+
+        getPfTabs().map((g,i)=>pfTabCfgField(i,g)).join('')+
       '</div>'+
       '<div class="card">'+
         '<div class="card-title">备份与恢复</div>'+
@@ -1405,8 +1456,13 @@ async function enumDelete(key,idx){
   await saveEnums();
   /* 到货枚举被删时，同步清掉购买页分组绑定 */
   if(key==='arrivals'){
-    const t=getPfTabs(),i=t.indexOf(v);
-    if(i>=0){t[i]='';setPfTabs(t);if(PF.tab===v)PF.tab='all'}
+    const t=getPfTabs();let ch=false;
+    t.forEach(g=>{
+      const k=g.arrivals.indexOf(v);
+      if(k>=0){g.arrivals.splice(k,1);ch=true;if(g.name===v)g.name=''}
+    });
+    if(ch)setPfTabs(t);
+    if(PF.tab!=='all'){const g=t.find(x=>x.id===PF.tab);if(!g||!g.arrivals.length)PF.tab='all'}
   }
   renderSettings();
 }
